@@ -17,6 +17,7 @@ import {
   type DashboardLearningActionRoute,
 } from "@/domain/dashboard/dashboard-learning-state";
 import type { LearningSkill } from "@/domain/learning/content-model";
+import { LANGUAGE_CATALOG } from "@/domain/learning/language-catalog";
 
 interface TodaysFocusCardProps {
   readonly activeLanguageCode?: string;
@@ -49,9 +50,14 @@ export function TodaysFocusCard({
   odynAiAvailable = true,
   isLoading,
 }: TodaysFocusCardProps) {
+  const catalogMatch = LANGUAGE_CATALOG.find(
+    (language) => language.name === activeLanguageName || language.nativeName === activeLanguageName,
+  );
+  const resolvedLanguageCode = activeLanguageCode ?? catalogMatch?.code;
+  const resolvedLevel = activeLevel ?? catalogMatch?.defaultLevel;
   const state = deriveDashboardLearningState({
-    languageCode: hasActiveCourse ? activeLanguageCode : undefined,
-    level: hasActiveCourse ? activeLevel : undefined,
+    languageCode: hasActiveCourse ? resolvedLanguageCode : undefined,
+    level: hasActiveCourse ? resolvedLevel : undefined,
     dailyGoalMinutes,
     streakDays: streak,
     reviewDue,
@@ -92,9 +98,9 @@ export function TodaysFocusCard({
             <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
               {state.description}
             </p>
-            {!isLoading && hasActiveCourse && (
+            {!isLoading && hasActiveCourse && state.level && (
               <p className="mt-3 text-sm font-medium text-foreground">
-                {state.languageFlag} {displayLanguageName} {state.level ? `· ${state.level}` : ""}
+                {state.languageFlag} {displayLanguageName} · {state.level}
               </p>
             )}
           </div>
