@@ -2,6 +2,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { BookOpenCheck, BrainCircuit, ChevronRight, MessageCircle, Sparkles, X } from "lucide-react";
 import { useState } from "react";
 
+import "@/components/hikari-guide.css";
 import { ShinGiTaiLanguageMark } from "@/components/shingitai-language-mark";
 
 const ACTIONS = [
