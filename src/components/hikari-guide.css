@@ -1,0 +1,49 @@
+@keyframes hikari-panel-enter {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes hikari-float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+@keyframes hikari-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(34, 211, 238, 0.18);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(34, 211, 238, 0);
+  }
+}
+
+.hikari-panel {
+  transform-origin: bottom right;
+  animation: hikari-panel-enter 180ms ease-out both;
+}
+
+.hikari-avatar {
+  animation: hikari-float 3.6s ease-in-out infinite;
+}
+
+.hikari-launcher > span:first-child {
+  animation: hikari-pulse 2.8s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hikari-panel,
+  .hikari-avatar,
+  .hikari-launcher > span:first-child {
+    animation: none;
+  }
+}
