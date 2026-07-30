@@ -10,10 +10,10 @@ import {
 import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
-import { reportLovableError } from "../lib/lovable-error-reporting";
 import { ThemeProvider } from "../lib/theme";
 import { AuthProvider } from "../lib/auth";
 import { supabase } from "@/integrations/supabase/client";
+import { HikariGuide } from "@/components/hikari-guide";
 import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
@@ -41,9 +41,6 @@ function NotFoundComponent() {
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   console.error(error);
   const router = useRouter();
-  useEffect(() => {
-    reportLovableError(error, { boundary: "tanstack_root_error_component" });
-  }, [error]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -52,7 +49,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
           This page didn't load
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Something went wrong on our end. You can try refreshing or head back home.
+          Something went wrong. Try the page again or return to the dashboard.
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
@@ -65,10 +62,10 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
             Try again
           </button>
           <a
-            href="/"
+            href="/dashboard"
             className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
           >
-            Go home
+            Go to dashboard
           </a>
         </div>
       </div>
@@ -84,23 +81,23 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         name: "viewport",
         content: "width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=5",
       },
-      { title: "ShinGiTai Language — Learn Languages With Your AI Tutor" },
+      { title: "ShinGiTai Language — Learn Languages With Hikari" },
       {
         name: "description",
         content:
-          "ShinGiTai Language is an AI-assisted language learning platform. Practice conversations, master grammar, and build vocabulary across 28+ languages with your personal AI tutor.",
+          "Learn languages with structured lessons, vocabulary review, tests and OdynAI-powered conversation practice guided by Hikari.",
       },
       { name: "author", content: "ShinGiTai Holding Groupe" },
-      { name: "theme-color", content: "#14b8a6" },
+      { name: "theme-color", content: "#6d4aff" },
       { name: "mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
       { name: "apple-mobile-web-app-title", content: "ShinGiTai Language" },
-      { property: "og:title", content: "ShinGiTai Language — Learn Languages With Your AI Tutor" },
+      { property: "og:title", content: "ShinGiTai Language — Learn Languages With Hikari" },
       {
         property: "og:description",
         content:
-          "Practice real conversations, master grammar, and build vocabulary across 28+ languages with a personal AI tutor.",
+          "Structured lessons, persistent vocabulary review, tests and OdynAI-powered conversation practice.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -165,8 +162,8 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <AuthProvider>
-          {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
           <Outlet />
+          <HikariGuide />
           <Toaster richColors position="top-center" />
         </AuthProvider>
       </ThemeProvider>
