@@ -36,5 +36,8 @@ jobs:
       - name: Lint atoms 16-22 foundation
         run: npm run lint:foundation
 
+      - name: Test foundation contracts
+        run: npm run test:foundation
+
       - name: Build
         run: npm run build
