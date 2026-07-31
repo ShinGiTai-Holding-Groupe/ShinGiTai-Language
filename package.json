@@ -9,7 +9,7 @@
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",
-    "lint:foundation": "eslint src/architecture src/domains/engagement src/domains/entitlements src/domains/governance src/domains/observability src/domains/sync src/domains/accessibility scripts/validate-architecture.mjs --rule 'prettier/prettier: off'",
+    "lint:foundation": "eslint src/architecture src/persistence src/domains/engagement src/domains/entitlements src/domains/governance src/domains/observability src/domains/sync src/domains/accessibility scripts/validate-architecture.mjs --rule 'prettier/prettier: off'",
     "format": "prettier --write .",
     "typecheck": "tsc --noEmit",
     "validate:architecture": "node scripts/validate-architecture.mjs",
