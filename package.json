@@ -10,7 +10,9 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "validate:architecture": "node scripts/validate-architecture.mjs",
+    "validate": "npm run validate:architecture && npm run typecheck && npm run lint && npm run build"
   },
   "dependencies": {
     "@ai-sdk/openai-compatible": "^2.0.51",
