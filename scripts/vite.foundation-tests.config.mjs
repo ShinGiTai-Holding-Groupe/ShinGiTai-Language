@@ -4,7 +4,7 @@ export default defineConfig({
   build: {
     emptyOutDir: true,
     lib: {
-      entry: "tests/foundation/persistence.test.ts",
+      entry: "tests/foundation/index.ts",
       formats: ["es"],
       fileName: () => "foundation-tests.mjs",
     },
