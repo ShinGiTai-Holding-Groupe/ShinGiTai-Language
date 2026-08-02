@@ -1,68 +1,119 @@
 # ShinGiTai Language
 
-Status: Prototype / product foundation
-Owner: ShinGiTai Holding Groupe
-Product Area: ArticSakuraTech
+Status: Product foundation / active development  
+Owner: ShinGiTai Holding Groupe  
+Product area: ArticSakuraTech
 
-## Purpose
+## Product definition
 
-ShinGiTai Language is a language-learning product in the ShinGiTai ecosystem.
+ShinGiTai Language is an AI Teacher Platform led by Hikari.
 
-The product direction is to combine structured lessons, flashcards, grammar explanations, progress tracking, user accounts, reminders and AI-assisted conversation practice into one learning platform.
+It is not a conventional language-learning application with a chatbot attached. Language owns the educational system, evidence, progress, assessment, content and pedagogical memory. Hikari is the central teacher-facing experience that uses those systems to guide the learner.
 
-## Product Vision
+The target experience is:
 
-The goal is to create a more flexible and AI-first alternative to classic language-learning apps.
+> I am going to study with Hikari.
 
-The system should support learners who want:
+## Canonical architecture
 
-- structured A1+ learning paths,
-- Japanese-style N5+ progression where relevant,
-- vocabulary and flashcard practice,
-- grammar explanations,
-- cultural notes,
-- writing practice,
-- microphone or text-based AI conversation,
-- personalized AI tutor/avatar experience,
-- account-based progress tracking.
+```text
+Language
+→ OdynAI
+→ RuntimePort
+→ Shinrei
+→ provider / model
+```
 
-## Initial Scope
+Language must not call physical providers, models, Ollama or Shinrei directly.
 
-Planned initial areas:
+Shinrei is the single AI execution runtime. Learning Core is a deterministic domain system inside Language, not a separate AI engine.
 
-- authentication and user accounts,
-- language selection,
-- native-language selection,
-- lesson categories,
-- progress tracking,
-- flashcards,
-- grammar notes,
-- AI tutor conversation mode,
-- reminders,
-- responsive web/mobile-ready interface.
+## Canonical product document
 
-## Strategic Context
+The authoritative product, Learning Core, Hikari, evidence, assessment, memory, synchronization, accessibility, content and implementation rules are defined in:
 
-ShinGiTai Language is part of the ArticSakuraTech product branch.
+[`docs/architecture/language-learning-core-canonical.md`](docs/architecture/language-learning-core-canonical.md)
 
-It should eventually connect with:
+That document is canonical and governs new architecture and product decisions.
 
-- OdynAI for AI tutoring,
-- ShinGiTai Hub for ecosystem navigation,
-- ShinGiTai Docs for product documentation and funding readiness.
+## Product components
 
-## Current Status
+```text
+ShinGiTai Language
+├── Learning Core
+│   ├── Course and Curriculum
+│   ├── Lesson Runtime
+│   ├── Exercise Engine
+│   ├── Learning Evidence
+│   ├── Assessment and Promotion
+│   ├── Vocabulary and SRS
+│   ├── Grammar
+│   ├── Learning Graph
+│   ├── Progress and Mastery
+│   ├── Pedagogical Memory
+│   ├── Persistence
+│   └── Synchronization
+├── Hikari Teacher Runtime
+├── Content System
+├── Quick Learning
+└── Learning Experience UI
+```
 
-This repository requires technical audit before external use.
+## Core rules
 
-Immediate next tasks:
+- Language owns durable pedagogical memory and educational truth.
+- OdynAI owns AI-access policy and approved context projection.
+- Shinrei owns providers, models and inference and stores no durable student memory.
+- Model output is evidence or a proposal requiring validation, not automatic truth.
+- Progress and promotion must derive from versioned Learning Evidence.
+- Published educational content is immutable; corrections create new versions.
+- CEFR, JLPT, HSK, TOPIK and similar levels are projections of an internal competency graph.
+- Student records always require explicit `user_id` and `tenant_partition` ownership.
+- Deterministic functionality works without AI wherever AI is not pedagogically necessary.
+- Accessibility is a product and assessment invariant.
 
-1. identify current stack and generated-code origin,
-2. remove unwanted vendor references if present,
-3. document setup instructions,
-4. define AI provider strategy,
-5. decide whether this remains a prototype or becomes a rewritten production product.
+## Implementation order
 
-## Repository Rule
+```text
+PHASE 0   Vision Freeze
+PHASE 1   Core contracts, identifiers and events
+PHASE 2   Minimal Persistence
+PHASE 3   Minimal Course + Lesson + Exercise
+PHASE 4   Minimal Assessment
+PHASE 5   Early Vertical E2E
+PHASE 6   Vocabulary + SRS
+PHASE 7   Grammar
+PHASE 8   Learning Graph
+PHASE 9   Hikari Teacher Runtime
+PHASE 10  Natural Interaction and Voice
+PHASE 11  Full Synchronization
+PHASE 12  Content Pipeline
+PHASE 13  Quick Learning
+PHASE 14  Dashboard and full UI
+PHASE 15  Course expansion
+PHASE 16  Multimodality
+```
 
-No external launch, investor claim or funding application should rely on this repository until the technical audit is completed.
+The early E2E reference slice is mandatory:
+
+```text
+Minimal Course
+→ Lesson
+→ Exercise
+→ Learning Evidence
+→ Assessment
+→ Hikari feedback
+→ Language
+→ OdynAI
+→ RuntimePort
+→ Shinrei
+→ real model
+```
+
+## Current technical status
+
+The repository contains a working Language-to-OdynAI tutor-chat boundary and the Atoms 16–22 domain foundation for engagement, entitlements, governance, observability, synchronization, accessibility and architecture.
+
+The product remains incomplete. Learning Core, production persistence, evidence-based assessment, full Hikari Teacher Runtime, complete content and full product E2E still require implementation and validation.
+
+No external launch, investor claim or production-readiness statement should represent the complete Language product as finished until the final product-readiness audit passes.
