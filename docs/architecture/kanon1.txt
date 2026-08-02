@@ -1,0 +1,1241 @@
+SHINGITAI LANGUAGE — KANON 1
+Learning Core, Hikari Teacher Platform and Product Implementation Plan
+Version: 1.0
+Status: CANONICAL / LOCKED
+Owner: ShinGiTai Holding Groupe
+
+====================================================================
+1. CEL PRODUKTU
+====================================================================
+
+ShinGiTai Language nie jest klasyczną aplikacją do nauki języków.
+
+Nie budujemy systemu:
+
+lekcja -> quiz -> punkty -> następna lekcja
+
+Budujemy platformę edukacyjną, której centralną postacią jest:
+
+HIKARI — OSOBISTY NAUCZYCIEL AI.
+
+Language dostarcza Hikari:
+
+- kursy,
+- materiał edukacyjny,
+- słownictwo,
+- gramatykę,
+- ćwiczenia,
+- testy,
+- egzaminy,
+- pamięć pedagogiczną,
+- system powtórek,
+- narzędzia szybkiej nauki,
+- dane potrzebne do prowadzenia ucznia.
+
+Docelowe doświadczenie użytkownika:
+
+„Idę uczyć się z Hikari.”
+
+Nie:
+
+„Idę kliknąć lekcję.”
+
+====================================================================
+2. GŁÓWNA FILOZOFIA
+====================================================================
+
+Hikari jest nauczycielem.
+Language jest platformą edukacyjną.
+Learning Core jest źródłem prawdy o procesie nauki.
+Assessment Engine chroni wiarygodność ocen.
+OdynAI zarządza dostępem do AI, kontekstem i orkiestracją.
+RuntimePort jest stabilną granicą wykonawczą.
+Shinrei jest jedynym silnikiem AI i właścicielem providerów, modeli oraz inference.
+
+Hikari nie jest chatbotem, dodatkiem ani oknem do LLM.
+
+Hikari:
+
+- diagnozuje,
+- prowadzi,
+- tłumaczy,
+- sprawdza,
+- motywuje,
+- planuje,
+- przeprowadza egzaminy,
+- pamięta postępy,
+- dobiera kolejne działania.
+
+====================================================================
+3. KANONICZNY PRZEPŁYW AI
+====================================================================
+
+Language -> OdynAI -> RuntimePort -> Shinrei -> provider/model
+
+Niezmienniki:
+
+- Language nie komunikuje się bezpośrednio z providerem.
+- Language nie komunikuje się bezpośrednio z modelem.
+- Language nie komunikuje się bezpośrednio z Ollama.
+- Language nie omija OdynAI.
+- Language nie posiada fizycznego providera AI.
+- Shinrei pozostaje jedynym silnikiem wykonującym modele.
+- Shinrei nie zna pojęć kurs, lekcja, słówko, mastery, promocja ani egzamin.
+
+====================================================================
+4. CZYM JEST LEARNING CORE
+====================================================================
+
+Learning Core nie jest drugim silnikiem AI.
+
+Learning Core jest silnikiem domenowym Language odpowiedzialnym za deterministyczną logikę edukacyjną.
+
+Zakres odpowiedzialności:
+
+- kursy,
+- poziomy,
+- moduły,
+- działy,
+- lekcje,
+- ćwiczenia,
+- próby,
+- testy,
+- egzaminy,
+- słownictwo,
+- gramatyka,
+- postęp,
+- mastery,
+- powtórki,
+- odblokowywanie,
+- ścieżki naprawcze,
+- historię nauki,
+- dowody kompetencji,
+- synchronizację stanu edukacyjnego.
+
+Learning Core nie generuje odpowiedzi AI.
+Learning Core przechowuje prawdę edukacyjną.
+
+====================================================================
+5. MODUŁY LEARNING CORE
+====================================================================
+
+ShinGiTai Language
+|
+|-- Core Contracts, Identifiers and Events
+|-- Course Engine
+|-- Curriculum Engine
+|-- Module Engine
+|-- Lesson Runtime
+|-- Exercise Engine
+|-- Learning Evidence Model
+|-- Assessment Engine
+|-- Promotion Engine
+|-- Vocabulary Engine
+|-- Grammar Engine
+|-- Review / SRS Engine
+|-- Mastery Engine
+|-- Internal Competency Graph
+|-- External Framework Mapping
+|-- Progress Engine
+|-- Content Validation
+|-- Content Provenance
+|-- Persistence
+|-- Synchronization
+|-- Pedagogical Memory
+|-- Hikari Teacher Runtime
+|-- Hikari Human Interaction Layer
+
+====================================================================
+6. COURSE ENGINE I COURSE DEFINITION SYSTEM
+====================================================================
+
+Kurs nie może być zapisany bezpośrednio w komponentach React ani zaszyty w UI.
+
+Kurs jest wersjonowaną definicją danych.
+
+Hierarchia:
+
+Course
+-> Internal Competency Scope
+-> External Level Projection
+-> Module
+-> Chapter
+-> Lesson
+-> Activity
+-> Challenge
+-> Exam
+
+Każdy kurs posiada:
+
+- target_language,
+- instruction_language variants,
+- interface locale support,
+- regional variant,
+- internal competency requirements,
+- external framework mappings,
+- communication goals,
+- grammar scope,
+- vocabulary scope,
+- prerequisite graph,
+- assessment rules,
+- remediation paths,
+- content version,
+- release version,
+- provenance and licensing metadata.
+
+Każdy element treści posiada co najmniej:
+
+content_id
+content_version
+schema_version
+release_id
+status
+valid_from
+deprecated_at
+
+Zasady publikacji:
+
+- rozpoczęta lekcja jest przypięta do konkretnej wersji,
+- opublikowana treść jest niemutowalna,
+- poprawka tworzy nową wersję,
+- wynik zawsze wskazuje wersję treści,
+- historyczny egzamin nie zmienia się po aktualizacji kursu,
+- migracja między wersjami jest jawna.
+
+====================================================================
+7. WIELOJĘZYCZNOŚĆ
+====================================================================
+
+System rozdziela:
+
+interface_language
+instruction_language
+target_language
+
+Przykład:
+
+Japończyk uczący się polskiego:
+
+interface_language = Japanese
+instruction_language = Japanese
+target_language = Polish
+
+Polak uczący się koreańskiego:
+
+interface_language = Polish
+instruction_language = Polish
+target_language = Korean
+
+Nie wolno zakładać, że językiem bazowym jest angielski.
+
+Nie wolno duplikować całego kursu dla każdej pary językowej.
+
+Model:
+
+target-language curriculum
++
+localized instructions
++
+localized explanations
++
+localized feedback
++
+contrastive grammar notes
++
+Hikari adaptation
+
+====================================================================
+8. INTERNAL COMPETENCY GRAPH I ZEWNĘTRZNE POZIOMY
+====================================================================
+
+CEFR nie jest jedynym wewnętrznym modelem poziomu.
+
+Źródłem prawdy jest:
+
+Internal Competency Graph
+
+Dopiero z niego wyliczane są wersjonowane projekcje:
+
+- CEFR,
+- JLPT,
+- HSK,
+- TOPIK,
+- ACTFL,
+- course-specific level.
+
+Zasada:
+
+internal_skill_state = source of truth
+external_level_mapping = versioned projection
+
+Hikari może powiedzieć użytkownikowi „około A2”, ale plan nauki i promocja bazują na dokładnym profilu kompetencji.
+
+====================================================================
+9. LESSON RUNTIME
+====================================================================
+
+Stany lekcji:
+
+NOT_STARTED
+IN_PROGRESS
+PAUSED
+COMPLETED
+FAILED
+ABANDONED
+REQUIRES_REVIEW
+
+Operacje:
+
+start
+pause
+resume
+save_checkpoint
+submit_answer
+request_hint
+skip_activity
+finish
+retry
+abandon
+restore_after_restart
+
+Każda lekcja zapisuje co najmniej:
+
+lesson_id
+user_id
+tenant_partition
+organization_id, gdy dotyczy
+course_id
+content_version
+release_id
+module_id
+started_at
+updated_at
+completed_at
+current_checkpoint
+answers
+hint_usage
+errors
+learning_evidence_ids
+assessment_result
+mastery_changes
+vocabulary_changes
+grammar_changes
+
+Lekcja musi być możliwa do wznowienia po:
+
+- zamknięciu aplikacji,
+- utracie internetu,
+- restarcie urządzenia,
+- zmianie urządzenia.
+
+====================================================================
+10. EXERCISE ENGINE
+====================================================================
+
+Minimalny zestaw aktywności:
+
+- single choice,
+- multiple choice,
+- true/false,
+- fill in the blank,
+- translation,
+- sentence builder,
+- word ordering,
+- matching,
+- flashcards,
+- dictation,
+- listening comprehension,
+- reading comprehension,
+- writing,
+- speaking,
+- pronunciation,
+- free response,
+- dialogue simulation,
+- picture description,
+- story builder,
+- conversation challenge.
+
+Każda aktywność definiuje:
+
+- input,
+- expected result lub rubric,
+- scoring policy,
+- hint policy,
+- difficulty,
+- skills measured,
+- evidence type,
+- evaluator type,
+- accessibility alternatives.
+
+====================================================================
+11. LEARNING EVIDENCE MODEL
+====================================================================
+
+Każda zmiana postępu musi wynikać z wersjonowanego Learning Evidence.
+
+Każdy dowód zawiera:
+
+evidence_id
+user_id
+tenant_partition
+organization_id, gdy dotyczy
+activity_id
+skill_id
+content_version
+attempt_id
+evidence_type
+input_modality
+result
+confidence
+hint_usage
+response_time
+rubric_version
+evaluator_type
+model_capability
+created_at
+status
+
+Evaluator type:
+
+DETERMINISTIC
+AI_ASSISTED
+HUMAN_REVIEWED
+
+Zasada:
+
+Wynik modelu AI jest obserwacją do walidacji, a nie automatycznie prawdą edukacyjną.
+
+Dla speaking i writing należy zapisywać:
+
+- rubric,
+- rubric_version,
+- structured observations,
+- confidence,
+- evidence fragments,
+- re-evaluation capability,
+- DISPUTED status,
+- manual correction,
+- re-evaluation history.
+
+====================================================================
+12. ASSESSMENT ENGINE I PROMOTION ENGINE
+====================================================================
+
+Hikari:
+
+- prowadzi rozmowę,
+- wybiera zadania,
+- reaguje na odpowiedzi,
+- komunikuje wynik,
+- wyjaśnia decyzję.
+
+Assessment Engine:
+
+- analizuje evidence,
+- stosuje wersjonowaną rubric,
+- liczy wynik,
+- sprawdza progi,
+- zatwierdza zaliczenie,
+- zatwierdza lub odrzuca promocję,
+- zapisuje uzasadnienie.
+
+Promotion Engine:
+
+- odblokowuje kolejny dział lub poziom,
+- tworzy remediation path,
+- blokuje nieuprawnioną promocję,
+- pozostaje deterministyczny.
+
+Użytkownik może zadeklarować poziom, ale deklaracja jest tylko hipotezą.
+
+Proces startowy:
+
+user declaration
+-> Hikari interview
+-> adaptive tasks
+-> Learning Evidence
+-> Assessment
+-> verified starting point
+
+Proces promocji:
+
+learning path
+-> end-of-section assessment
+-> evidence validation
+-> promotion decision
+-> next section/level unlock
+
+====================================================================
+13. MASTERY WIELOWYMIAROWE
+====================================================================
+
+Pojedynczy status MASTERED jest niewystarczający jako stan źródłowy.
+
+Dla słownictwa przechowywane są osobne wymiary:
+
+recognition_mastery
+recall_mastery
+listening_mastery
+production_mastery
+pronunciation_mastery
+orthography_mastery
+contextual_use_mastery
+
+Przykład:
+
+recognition = MASTERED
+listening = REVIEW
+production = LEARNING
+pronunciation = RELEARNING
+
+Dla gramatyki:
+
+recognition
+controlled_production
+free_production
+conversation_transfer
+retention
+
+Ogólny MASTERED może być projekcją UI, ale nie jedynym przechowywanym stanem.
+
+====================================================================
+14. VOCABULARY ENGINE I SRS
+====================================================================
+
+Stany cyklu życia elementu słownikowego:
+
+NEW
+LEARNING
+REVIEW
+MASTERED
+RELEARNING
+SUSPENDED
+
+Każde słowo może posiadać:
+
+- formę podstawową,
+- tłumaczenia,
+- wymowę,
+- zapis fonetyczny,
+- część mowy,
+- przykłady,
+- kolokacje,
+- synonimy,
+- antonimy,
+- rejestr formalny i potoczny,
+- częstotliwość,
+- poziom,
+- typowe błędy,
+- historię odpowiedzi,
+- historię wymowy,
+- datę następnej powtórki,
+- wielowymiarowe mastery.
+
+SRS bierze pod uwagę:
+
+- poprawność,
+- czas odpowiedzi,
+- liczbę podpowiedzi,
+- pewność,
+- typ ćwiczenia,
+- transfer do nowego kontekstu,
+- historię zapominania,
+- retencję po czasie.
+
+Słówko użyte poprawnie w swobodnej rozmowie jest silniejszym dowodem niż rozpoznanie na fiszce.
+
+====================================================================
+15. GRAMMAR ENGINE
+====================================================================
+
+Każdy temat gramatyczny posiada:
+
+- definicję,
+- zastosowanie,
+- przykłady,
+- kontrprzykłady,
+- wyjątki,
+- typowe błędy,
+- zależności,
+- prerequisites,
+- poziom,
+- wariant formalny,
+- wariant potoczny,
+- ćwiczenia,
+- evidence requirements,
+- mastery dimensions.
+
+AI może wyjaśniać regułę.
+Grammar Engine przechowuje jej kanoniczną strukturę i stan opanowania.
+
+====================================================================
+16. LEARNING GRAPH
+====================================================================
+
+Learning Graph nie jest liniową listą lekcji.
+
+Opisuje zależności pomiędzy:
+
+- vocabulary,
+- grammar,
+- listening,
+- speaking,
+- reading,
+- writing,
+- pronunciation,
+- conversation,
+- cultural competence.
+
+Hikari może:
+
+- wybierać ścieżkę,
+- proponować powrót,
+- wskazywać lukę,
+- dobierać materiał,
+- rekomendować egzamin.
+
+Hikari nie może:
+
+- tworzyć kanonicznej zależności,
+- usuwać prerequisite,
+- zmieniać progów promocji,
+- modyfikować oficjalnego programu.
+
+Zmiana grafu:
+
+AI_PROPOSAL
+-> CONTENT_REVIEW
+-> PEDAGOGICAL_REVIEW
+-> VERSIONED_RELEASE
+
+====================================================================
+17. PEDAGOGICAL MEMORY
+====================================================================
+
+Własność pamięci:
+
+Language owns durable pedagogical memory.
+OdynAI owns memory-access policy and context projection.
+Hikari consumes selected pedagogical context.
+Shinrei stores no durable student memory.
+
+Pedagogical Memory nie jest swobodnym tekstem modelu.
+
+Ustrukturyzowane rekordy:
+
+StudentGoal
+LearningPreference
+RecurringError
+ObservedStrength
+InterventionResult
+ExamHistory
+MotivationSignal
+TeacherObservation
+
+Status obserwacji:
+
+PROPOSED
+VALIDATED
+REJECTED
+EXPIRED
+
+Model może zaproponować obserwację.
+Language decyduje, czy obserwacja zostanie zapisana jako wiarygodna pamięć.
+
+Użytkownik musi mieć możliwość:
+
+- przeglądania pamięci,
+- edycji,
+- usunięcia,
+- eksportu,
+- wyłączenia pamięci długoterminowej.
+
+====================================================================
+18. HIKARI TEACHER RUNTIME
+====================================================================
+
+Moduły:
+
+- Hikari Identity,
+- Hikari Relationship State,
+- Hikari Teacher Policy,
+- Student Profile,
+- Pedagogical Memory Projection,
+- Session Planner,
+- Lesson Orchestrator,
+- Conversation Runtime,
+- Exam Runtime,
+- Feedback Engine,
+- Motivation Policy,
+- Recommendation Engine,
+- Intervention Policy,
+- Human Interaction Layer,
+- Spoken Response Realizer,
+- Conversation Quality Gate.
+
+Hikari powinna:
+
+- poznawać ucznia,
+- pamiętać błędy i sukcesy,
+- znać cele,
+- dobierać tempo,
+- proponować materiał,
+- proponować powtórki,
+- proponować lub odradzać egzamin,
+- uzasadniać decyzje,
+- zachowywać ciągłość przez miesiące i lata.
+
+====================================================================
+19. HIKARI HUMAN INTERACTION LAYER
+====================================================================
+
+Cel: usunąć IVONA Effect i robotyczny sposób odpowiedzi.
+
+Kontrakt odpowiedzi Hikari posiada dwie projekcje tej samej decyzji nauczycielskiej:
+
+- display_text,
+- spoken_text.
+
+Nie muszą być identyczne.
+
+Przykład:
+
+{
+  "display_text": "Odpowiedź jest prawie poprawna, ale wymaga zmiany końcówki.",
+  "spoken_text": "Prawie. Sens jest dobry, ale końcówka znowu ci uciekła. Spróbuj jeszcze raz.",
+  "interaction_profile": {
+    "mode": "teacher_feedback",
+    "tone": "supportive_firm",
+    "response_length": "short"
+  },
+  "speech_profile": {
+    "pace": "calm",
+    "energy": "low",
+    "pause_style": "conversational"
+  }
+}
+
+IVONA_EFFECT_BENCHMARK testuje:
+
+- sztuczne formuły,
+- automatyczne chwalenie,
+- nadmierne listy,
+- brak zmiany rytmu,
+- czytanie markdownu,
+- powtarzanie pytania,
+- kończenie każdej odpowiedzi pytaniem,
+- nienaturalną mowę.
+
+====================================================================
+20. QUICK LEARNING
+====================================================================
+
+Hikari nie jest jedynym sposobem nauki.
+
+Quick Learning pozwala odpocząć od pełnej sesji nauczycielskiej i nadal robić realny postęp.
+
+Aktywności:
+
+- Flashcards,
+- Speed Recall,
+- Match & Connect,
+- Memory,
+- Sentence Builder,
+- Listening Challenge,
+- Dictation,
+- Kana Trainer,
+- Kanji Trainer,
+- Pronunciation Practice,
+- Story Builder,
+- Conversation Challenge,
+- Boss Challenge.
+
+Każda aktywność zapisuje Learning Evidence i wpływa na realny profil kompetencji.
+
+Quick Learning nie jest oddzielną grą bez wpływu na naukę.
+
+====================================================================
+21. AI USAGE POLICY
+====================================================================
+
+Zasada:
+
+deterministic-first
+AI-when-pedagogically-useful
+
+Bez AI powinny działać:
+
+- fiszki,
+- matching,
+- SRS,
+- proste quizy,
+- checkpointy,
+- odblokowywanie,
+- kalkulacja wyniku,
+- harmonogram powtórek,
+- walidacja jednoznacznych odpowiedzi.
+
+AI jest używane do:
+
+- rozmowy,
+- elastycznych wyjaśnień,
+- writing feedback,
+- speaking,
+- generowania przykładów kontekstowych,
+- interpretacji odpowiedzi otwartych,
+- planowania nauczycielskiego na podstawie danych.
+
+Cel:
+
+- niższa latencja,
+- mniejsze obciążenie,
+- mniejszy koszt,
+- mniejsze ryzyko niestabilności,
+- zgodność z możliwościami RTX 2060 Super.
+
+====================================================================
+22. SYNCHRONIZACJA OPARTA NA ZDARZENIACH
+====================================================================
+
+Model:
+
+append-only Learning Events
+-> deterministic reducers
+-> current learning state
+
+Przykładowe zdarzenia:
+
+LESSON_STARTED
+ANSWER_SUBMITTED
+HINT_USED
+ACTIVITY_COMPLETED
+VOCABULARY_EVIDENCE_RECORDED
+ASSESSMENT_COMPLETED
+REVIEW_SCHEDULED
+PROMOTION_APPROVED
+
+Każde zdarzenie zawiera:
+
+event_id
+idempotency_key
+user_id
+tenant_partition
+organization_id, gdy dotyczy
+device_id
+occurred_at
+received_at
+schema_version
+payload
+
+Zasady:
+
+- retry nie duplikuje wyniku,
+- offline queue jest bezpieczna,
+- stan można odtworzyć,
+- konflikty są audytowalne,
+- nie nadpisujemy postępu ostatnim zapisem,
+- evidence, assessmenty i promocje są append-only.
+
+====================================================================
+23. IZOLACJA UŻYTKOWNIKÓW
+====================================================================
+
+Dla danych ucznia:
+
+user_id = wymagane
+tenant_partition = zawsze wymagane
+organization_id = wymagane, gdy rekord należy do organizacji
+
+Niezmiennik:
+
+Żaden rekord postępu, pamięci, odpowiedzi, nagrania lub oceny nie może istnieć bez jednoznacznego właściciela i partycji tenantowej.
+
+====================================================================
+24. PRYWATNOŚĆ, ZGODA I RETENCJA
+====================================================================
+
+Wymagane mechanizmy:
+
+- jawna zgoda na długoterminową pamięć,
+- możliwość przejrzenia pamięci Hikari,
+- edycja i usunięcie obserwacji,
+- eksport danych,
+- usunięcie konta i danych,
+- osobna zgoda na audio i obrazy,
+- polityka retencji,
+- niewysyłanie surowych nagrań do logów,
+- domyślne nieprzechowywanie audio po wykonaniu oceny,
+- szyfrowanie danych lokalnych i serwerowych.
+
+====================================================================
+25. ACCESSIBILITY
+====================================================================
+
+Accessibility jest niezmiennikiem produktu i assessmentu, nie tylko UI.
+
+Aplikacja wspiera:
+
+- pełną klawiaturę,
+- screen reader,
+- napisy,
+- transkrypcję,
+- możliwość wyłączenia dźwięku,
+- alternatywę dla speaking,
+- alternatywę dla listening,
+- reduced motion,
+- wysoki kontrast,
+- regulację wielkości tekstu,
+- wsparcie dysleksji,
+- brak kary za niepełnosprawność mowy lub słuchu.
+
+Assessment musi rozróżniać accessibility accommodation od niezaliczenia kompetencji.
+
+====================================================================
+26. CONTENT PROVENANCE I LICENCJE
+====================================================================
+
+Każdy materiał posiada:
+
+author
+source
+license
+commercial_use_allowed
+generated_by_ai
+generation_model
+reviewers
+review_dates
+release_version
+
+Treść wygenerowana przez AI nie może automatycznie trafić do RELEASE_READY.
+
+Wymagane etapy:
+
+linguistic review
+pedagogical review
+license/provenance review
+technical validation
+
+====================================================================
+27. BEZPIECZNA RELACJA Z HIKARI
+====================================================================
+
+Hikari może być naturalna, ciepła i relacyjna, ale nie manipuluje użytkownikiem.
+
+Hikari nie powinna:
+
+- zawstydzać za brak streaku,
+- wzbudzać poczucia winy za przerwę,
+- udawać biologicznej osoby,
+- twierdzić, że cierpi, gdy użytkownik nie wraca,
+- wymuszać emocjonalnego przywiązania,
+- przedstawiać się jako zastępstwo lekarza, terapeuty lub człowieka w rolach, których nie pełni,
+- ukrywać, że ocena była wsparta przez AI.
+
+====================================================================
+28. WCZESNY PIONOWY E2E
+====================================================================
+
+E2E nie może czekać do końca projektu.
+
+Minimalny pion referencyjny:
+
+Minimalny Course
+-> jedna Lesson
+-> jedno Exercise
+-> zapis Learning Evidence
+-> Assessment
+-> Hikari feedback
+-> Language
+-> OdynAI
+-> RuntimePort
+-> Shinrei
+-> rzeczywisty model
+
+Pełne UI może czekać.
+Minimalny ekran diagnostyczny do E2E powstaje wcześnie.
+
+====================================================================
+29. KOLEJNOŚĆ IMPLEMENTACJI
+====================================================================
+
+PHASE 0
+Vision Freeze
+
+PHASE 1
+Core contracts, identifiers and events
+
+PHASE 2
+Minimal Persistence
+
+PHASE 3
+Minimal Course + Lesson + Exercise
+
+PHASE 4
+Minimal Assessment
+
+PHASE 5
+Early Vertical E2E
+
+PHASE 6
+Vocabulary + SRS
+
+PHASE 7
+Grammar
+
+PHASE 8
+Internal Competency Graph and Learning Graph
+
+PHASE 9
+Hikari Teacher Runtime
+
+PHASE 10
+Human Interaction Layer, Spoken Response Realizer and Voice
+
+PHASE 11
+Full Synchronization
+
+PHASE 12
+Content Pipeline
+
+PHASE 13
+Quick Learning
+
+PHASE 14
+Dashboard and full UI
+
+PHASE 15
+Course expansion
+
+PHASE 16
+Multimodality
+
+====================================================================
+30. STANDARD REALIZACJI KAŻDEGO MODUŁU
+====================================================================
+
+Każdy moduł przechodzi kolejno:
+
+domain design
+-> types and contracts
+-> implementation
+-> unit tests
+-> persistence tests
+-> integration tests
+-> architecture validation
+-> application service
+-> early or scoped E2E
+-> Hikari integration
+-> UI integration
+-> full E2E
+-> documentation
+-> final audit
+
+Nie wolno budować pełnego UI przed posiadaniem działającej logiki i prawdziwych danych.
+
+====================================================================
+31. WYMAGANE TESTY
+====================================================================
+
+- identyfikatory i kontrakty,
+- wersjonowanie eventów,
+- utworzenie kursu,
+- niemutowalność publikowanych treści,
+- rozpoczęcie lekcji,
+- checkpoint,
+- wznowienie po restarcie,
+- odpowiedzi i hint usage,
+- Learning Evidence,
+- deterministic evaluation,
+- AI-assisted evaluation validation,
+- assessment versioning,
+- promotion blocking and approval,
+- remediation path,
+- vocabulary multidimensional mastery,
+- SRS scheduling,
+- grammar mastery,
+- internal competency graph,
+- external framework mapping,
+- pedagogical memory lifecycle,
+- tenant isolation,
+- offline queue,
+- idempotency,
+- multi-device synchronization,
+- accessibility accommodations,
+- content provenance,
+- IVONA_EFFECT_BENCHMARK,
+- Early Vertical E2E,
+- complete Language -> OdynAI -> RuntimePort -> Shinrei E2E.
+
+====================================================================
+32. GRANICE ODPOWIEDZIALNOŚCI
+====================================================================
+
+Learning Core owns:
+
+- educational truth,
+- course state,
+- evidence,
+- progress,
+- mastery,
+- assessment results,
+- promotion state,
+- review scheduling,
+- durable pedagogical memory.
+
+Hikari owns:
+
+- teacher behavior,
+- natural interaction,
+- explanation,
+- guidance,
+- communication of decisions,
+- relationship continuity as a product experience.
+
+OdynAI owns:
+
+- AI access,
+- context projection,
+- memory-access policy,
+- governance,
+- orchestration,
+- limits,
+- security.
+
+RuntimePort owns:
+
+- stable execution contract.
+
+Shinrei owns:
+
+- providers,
+- models,
+- inference,
+- runtime capabilities,
+- runtime health.
+
+UI owns:
+
+- presentation,
+- interaction,
+- accessibility,
+- visualization.
+
+UI nie posiada logiki edukacyjnej.
+
+====================================================================
+33. NIEZMIENNIKI
+====================================================================
+
+INVARIANT 1
+Hikari jest centralną postacią doświadczenia edukacyjnego.
+
+INVARIANT 2
+Learning Core jest źródłem prawdy o stanie nauki.
+
+INVARIANT 3
+Model AI nie może samodzielnie zmieniać poziomu, postępu ani mastery.
+
+INVARIANT 4
+Assessment Engine zatwierdza promocję na podstawie Learning Evidence.
+
+INVARIANT 5
+Żadna logika pedagogiczna nie trafia do Shinrei.
+
+INVARIANT 6
+Language korzysta z AI wyłącznie przez:
+Language -> OdynAI -> RuntimePort -> Shinrei.
+
+INVARIANT 7
+Interface language, instruction language i target language są niezależne.
+
+INVARIANT 8
+Quick Learning wpływa na rzeczywisty profil nauki.
+
+INVARIANT 9
+Każdy panel UI pokazuje prawdziwy stan produktu.
+
+INVARIANT 10
+Nie wolno uznać funkcji za gotową bez testu i persistence.
+
+INVARIANT 11
+Każda zmiana postępu wynika z wersjonowanego Learning Evidence.
+
+INVARIANT 12
+Pedagogical Memory należy do Language. OdynAI kontroluje dostęp. Shinrei nie przechowuje pamięci ucznia.
+
+INVARIANT 13
+Display text i spoken text są oddzielnymi projekcjami tej samej reakcji Hikari.
+
+INVARIANT 14
+Opublikowana treść edukacyjna jest niemutowalna. Zmiana tworzy nową wersję.
+
+INVARIANT 15
+CEFR, JLPT, HSK, TOPIK i inne poziomy są projekcjami wewnętrznego profilu kompetencji.
+
+INVARIANT 16
+AI działa tylko wtedy, gdy wnosi wartość pedagogiczną; podstawowa logika pozostaje deterministyczna.
+
+INVARIANT 17
+Każdy rekord edukacyjny posiada user_id i tenant_partition.
+
+INVARIANT 18
+Learning Graph nie może być samodzielnie mutowany przez AI.
+
+INVARIANT 19
+Wczesny pionowy E2E powstaje przed rozbudową całego produktu.
+
+INVARIANT 20
+Relacja z Hikari nie wykorzystuje mechanik manipulacyjnych.
+
+====================================================================
+34. ZASADA PRZEWODNIA
+====================================================================
+
+Każda nowa funkcja musi odpowiedzieć na pytanie:
+
+„Czy pomaga Hikari być lepszym nauczycielem albo pomaga uczniowi skuteczniej się uczyć?”
+
+Jeżeli nie — funkcja nie należy do głównego produktu.
+
+====================================================================
+35. OSTATECZNY CEL
+====================================================================
+
+ShinGiTai Language ma być:
+
+AI Teacher Platform
+
+Nie:
+
+language app with AI
+
+Lecz:
+
+language academy led by Hikari
+
+Language jest platformą.
+Hikari jest nauczycielem.
+Learning Core zarządza edukacją.
+Learning Evidence chroni prawdę o postępie.
+Assessment Engine chroni wiarygodność ocen.
+OdynAI zarządza inteligencją aplikacyjną.
+RuntimePort chroni kontrakt wykonawczy.
+Shinrei wykonuje modele.
+
+Całość tworzy jeden spójny system nauki języków rozwijany na lata.
+
+====================================================================
+36. STATUS DOKUMENTU
+====================================================================
+
+Ten plik jest kanonem projektu ShinGiTai Language.
+
+Każde odejście wymaga:
+
+- jawnej decyzji właściciela produktu,
+- nowej wersji dokumentu,
+- oceny wpływu architektonicznego,
+- aktualizacji testów i kontraktów,
+- ponownej walidacji E2E.
+
+Ciche odejście od tego dokumentu jest niedopuszczalne.
