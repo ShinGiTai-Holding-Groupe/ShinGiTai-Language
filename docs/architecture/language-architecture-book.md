@@ -1,36 +1,32 @@
 # ShinGiTai Language Architecture Book
 
-**Version:** 0.1-draft  
-**Status:** WORKING ARCHITECTURE REFERENCE  
+**Version:** 0.1.1-draft  
+**Status:** WORKING ARCHITECTURE REFERENCE — ACCEPTED WITH STABLE STATUS PENDING E2E PLAN  
 **Owner:** ShinGiTai Holding Groupe  
 **Primary canonical source:** `docs/architecture/kanon1.txt`
 
 ---
 
-## 0. Purpose of this book
+## 0. Purpose and review status
 
 This book translates the accepted product vision and reviewed core architecture of ShinGiTai Language into an implementation-oriented architecture reference.
 
-It does not replace `kanon1.txt`.
+It does not replace `kanon1.txt`. When this book conflicts with `kanon1.txt`, the canon wins until an explicit owner-approved canon revision is created.
 
-`kanon1.txt` defines product and architectural canon. This book explains how that canon is applied across bounded contexts, data ownership, execution flows, integration boundaries, testing, synchronization, content lifecycle, AI usage and future implementation phases.
+Current review state:
 
-When this book conflicts with `kanon1.txt`, the canon wins until an explicit owner-approved canon revision is created.
+- Product vision: **ACCEPTED**
+- Implementation direction: **ACCEPTED**
+- Alignment with `kanon1`: **ACCEPTED**
+- Repository validation for the reviewed SHA: **PASS**
+- Stable reference status: **WAITING FOR EARLY VERTICAL E2E PLAN REVIEW AND CROSS-REPOSITORY CONFIRMATION**
+- Merge status of PR #13: **NOT EVALUATED BY THIS DOCUMENT REVIEW**
 
 ---
 
 ## 1. Product architecture thesis
 
 ShinGiTai Language is an AI Teacher Platform led by Hikari.
-
-The user-facing product goal is not:
-
-```text
-open application
-→ click lesson
-→ complete quiz
-→ collect points
-```
 
 The target experience is:
 
@@ -70,14 +66,7 @@ ShinGiTai Language
  provider / model
 ```
 
-Language must not:
-
-- call a provider directly,
-- call Ollama directly,
-- call a physical model directly,
-- bypass OdynAI,
-- embed provider credentials,
-- leak provider, node or GPU identity into educational domain state.
+Language must not call providers, Ollama, Shinrei or physical models directly. Provider, node, GPU and physical-model identity must not leak into educational domain state.
 
 ### 2.2 Canonical educational flow
 
@@ -99,14 +88,17 @@ Promotion Engine
 module / level transition or remediation
 ```
 
-### 2.3 Hikari interaction flow
+### 2.3 Hikari interaction flow: pre-inference and post-inference phases
+
+The Human Interaction Layer is explicitly split into two phases. This prevents response realization from being implemented before semantic generation.
 
 ```text
 Learning state + selected pedagogical context
         ↓
 Hikari Teacher Runtime
         ↓
-Hikari Human Interaction Layer
+Pre-generation Interaction Policy
+(intent, tone, constraints, response length, teaching objective)
         ↓
 OdynAI
         ↓
@@ -114,20 +106,35 @@ RuntimePort
         ↓
 Shinrei
         ↓
-AI result
+semantic AI result
+        ↓
+Post-generation Response Realizer
+        ↓
+Spoken Response Realizer
         ↓
 Conversation Quality Gate
         ↓
 display_text + spoken_text
 ```
 
+Canonical internal structure:
+
+```text
+Hikari Human Interaction Layer
+├── Pre-generation Interaction Policy
+└── Post-generation Response Realizer
+    ├── Display Response Projection
+    ├── Spoken Response Realizer
+    └── Conversation Quality Gate
+```
+
+`display_text` and `spoken_text` are two projections of the same teacher decision, but they do not need to be identical.
+
 Hikari may explain, guide, assess conversationally and recommend actions. Hikari does not directly mutate mastery, promotion state, assessment outcomes or canonical curriculum dependencies.
 
 ---
 
 ## 3. Bounded contexts
-
-ShinGiTai Language is divided into independent bounded contexts.
 
 ```text
 ShinGiTai Language
@@ -143,150 +150,76 @@ ShinGiTai Language
 
 ### 3.1 Learning Core
 
-Owns:
+Owns educational truth, course and lesson state, Learning Evidence, assessment, mastery, progress, vocabulary, grammar, review scheduling, promotion prerequisites, remediation state and internal competency state.
 
-- educational truth,
-- course state,
-- lesson state,
-- activity state,
-- Learning Evidence,
-- assessment,
-- mastery,
-- progress,
-- vocabulary state,
-- grammar state,
-- review scheduling,
-- promotion prerequisites,
-- remediation state,
-- internal competency state.
-
-Does not own:
-
-- Hikari Identity,
-- teacher persona,
-- spoken response realization,
-- provider routing,
-- physical model execution,
-- global memory access policy.
+Does not own Hikari Identity, teacher persona, response realization, provider routing, physical execution or global memory-access policy.
 
 ### 3.2 Hikari Teacher Runtime
 
 Owned by Language, but separate from Learning Core.
 
-Owns:
+Owns Hikari Teacher Policy, pedagogical relationship state, Student Profile projection, Session Planner, Lesson Orchestrator, Exam Runtime, intervention policy, recommendation logic and selected Pedagogical Memory projection.
 
-- Hikari Teacher Policy,
-- pedagogical relationship state,
-- Student Profile projection,
-- Session Planner,
-- Lesson Orchestrator,
-- Exam Runtime,
-- intervention policy,
-- recommendation logic,
-- selected Pedagogical Memory projection.
-
-Consumes the global Hikari Identity Core from OdynAI.
-
-Language must never create a separate identity that diverges from Hikari in Hub, Forge or other ShinGiTai products.
+Consumes the global Hikari Identity Core from OdynAI. Language must not create a separate Hikari identity that diverges from Hub, Forge or other ShinGiTai products.
 
 ### 3.3 Hikari Human Interaction Layer
 
 Owned by Language for educational interaction.
 
-Owns:
+Pre-generation responsibilities:
 
 - interaction intent,
 - teacher tone,
-- conversational pacing,
-- response length policy,
-- Spoken Response Realizer,
+- conversational pacing constraints,
+- response-length policy,
+- generation constraints,
+- teaching objective projection.
+
+Post-generation responsibilities:
+
+- semantic-result realization,
+- display projection,
+- spoken response realization,
 - Conversation Quality Gate,
-- IVONA Effect benchmark rules,
-- educational display and speech projections.
-
-Core invariant:
-
-```text
-display_text and spoken_text are two projections
-of the same teacher decision,
-but they do not need to be identical.
-```
+- IVONA Effect benchmark validation.
 
 ### 3.4 Application Services
 
-Owns orchestration between bounded contexts.
-
-Responsibilities include:
-
-- starting and resuming lessons,
-- submitting answers,
-- requesting deterministic or AI-assisted evaluation,
-- creating evidence,
-- invoking assessment,
-- invoking promotion,
-- projecting state to UI,
-- preparing Hikari context,
-- preserving transactional and authorization boundaries.
-
-Application Services do not own educational rules.
+Orchestrate bounded contexts, authorization and transactional boundaries. They start and resume lessons, submit answers, create evidence, invoke assessment and promotion, prepare Hikari context and project state to UI. They do not own educational rules.
 
 ### 3.5 Persistence / Synchronization
 
 Backend Language owns canonical synchronized learning state.
 
-Client owns only:
-
-- local projections,
-- pending offline events,
-- local checkpoints,
-- synchronization cursor.
-
-Client time is never authoritative.
-Server-assigned revision determines accepted ordering.
+Client owns local projections, pending offline events, checkpoints and synchronization cursor. Client time is never authoritative. Server-assigned revision determines accepted ordering.
 
 ### 3.6 Content System
 
-Owns:
-
-- versioned course definitions,
-- immutable published content,
-- curriculum releases,
-- provenance,
-- licensing metadata,
-- review states,
-- framework mappings,
-- content migration policy.
+Owns versioned course definitions, immutable published content, curriculum releases, provenance, licenses, review states, framework mappings and migration policy.
 
 ### 3.7 UI
 
-Owns presentation, interaction, accessibility and visualization.
-
-UI does not own:
-
-- scoring,
-- promotion rules,
-- mastery rules,
-- review scheduling,
-- educational truth,
-- AI provider logic.
+Owns presentation, interaction, accessibility and visualization. UI does not own scoring, promotion, mastery, SRS, educational truth or provider logic.
 
 ---
 
 ## 4. Ecosystem ownership matrix
 
 | Capability | Language | OdynAI | RuntimePort | Shinrei |
-|---|---:|---:|---:|---:|
+|---|---|---|---|---|
 | Course state | Owns | No | No | No |
 | Learning Evidence | Owns | No | No | No |
 | AssessmentDecision | Owns | No | No | No |
 | Promotion transition | Owns | No | No | No |
-| Pedagogical Memory | Owns durable records | Controls access/projection policy | No | No |
+| Pedagogical Memory | Owns durable records | Controls access and context projection policy | No | No |
 | Global Hikari Identity Core | Consumes | Owns | No | No |
-| Hikari Teacher Policy | Owns | Applies global constraints | No | No |
-| AI request policy | Requests | Owns | Enforces contract | Executes indirectly |
-| Runtime execution contract | No | Uses | Owns boundary | Implements runtime side |
-| Providers and physical models | No | No | No | Owns |
+| Hikari Teacher Policy | Owns | Applies global Hikari constraints | No | No |
+| Product AI policy | Requests capability | Owns and enforces | No | No |
+| Execution contract | Uses application side | Projects request | Defines and version-controls boundary | Implements runtime side |
+| Physical execution | No | No | No | Owns and executes |
 | Provider/model/node/GPU details in educational state | Forbidden | Auditable internally | Transport only | Owns execution details |
+
+RuntimePort does not own product policy. It defines and protects the stable communication boundary. Shinrei physically executes inference; it does not execute indirectly.
 
 ---
 
@@ -316,16 +249,7 @@ External framework mappings are projections, not parents in the course hierarchy
 
 ### 5.2 Internal source of truth
 
-The internal competency graph is authoritative.
-
-External frameworks are versioned projections:
-
-- CEFR,
-- JLPT,
-- HSK,
-- TOPIK,
-- ACTFL,
-- course-specific levels.
+The Internal Competency Graph is authoritative. CEFR, JLPT, HSK, TOPIK, ACTFL and course-specific levels are versioned projections.
 
 ```text
 internal_skill_state = source of truth
@@ -334,142 +258,64 @@ external_level_mapping = versioned projection
 
 ### 5.3 Content immutability
 
-Every published content item must include:
+Every published content item includes `content_id`, `content_version`, `schema_version`, `release_id`, `status`, `valid_from` and `deprecated_at`.
 
-- `content_id`,
-- `content_version`,
-- `schema_version`,
-- `release_id`,
-- `status`,
-- `valid_from`,
-- `deprecated_at`.
-
-Rules:
-
-- a started lesson is pinned to a concrete content version,
-- a published item is never edited in place,
-- a correction creates a new version,
-- historical assessment remains tied to the original version,
-- migration between versions is explicit.
+A started lesson remains pinned to a concrete version. Published content is never edited in place. Corrections create new versions. Historical assessments remain tied to their original content and rubric versions.
 
 ### 5.4 Multilingual architecture
 
-The system separates:
-
-- `interface_language`,
-- `instruction_language`,
-- `target_language`.
-
-English is not assumed to be the universal base language.
-
-The system model is:
-
-```text
-target-language curriculum
-+
-localized instructions
-+
-localized explanations
-+
-localized feedback
-+
-contrastive grammar notes
-+
-Hikari adaptation
-```
+The system separates `interface_language`, `instruction_language` and `target_language`. English is not a mandatory base language.
 
 ---
 
 ## 6. Learning Evidence architecture
 
-Learning Evidence is the basis for every consequential learning-state change.
+Every consequential learning-state change must derive from versioned Learning Evidence.
 
-Minimum fields:
+Minimum fields include:
 
-- `evidence_id`,
-- `user_id`,
-- `tenant_partition`,
-- `organization_id` when applicable,
-- `activity_id`,
-- `skill_id`,
-- `content_version`,
-- `attempt_id`,
-- `evidence_type`,
-- `input_modality`,
-- `result`,
-- `confidence`,
-- `hint_usage`,
-- `response_time`,
-- `rubric_version`,
-- `evaluator_type`,
-- `model_capability`,
-- `capability_contract_version`,
-- `evaluation_policy_version`,
-- `evaluator_release`,
-- `execution_receipt_id`,
-- `request_id`,
-- `trace_id`,
-- `supersedes_evidence_id`,
-- `created_at`,
-- `validated_at`,
-- `validated_by`,
+- `evidence_id`, `user_id`, `tenant_partition`, `organization_id` when applicable,
+- `activity_id`, `skill_id`, `content_version`, `attempt_id`,
+- `evidence_type`, `input_modality`, `result`, `confidence`,
+- `hint_usage`, `response_time`, `rubric_version`, `evaluator_type`,
+- `model_capability`, `capability_contract_version`,
+- `evaluation_policy_version`, `evaluator_release`,
+- `execution_receipt_id`, `request_id`, `trace_id`,
+- `supersedes_evidence_id`, `created_at`, `validated_at`, `validated_by`,
 - `status`.
 
 Evaluator types:
 
-- `DETERMINISTIC`,
-- `AI_ASSISTED`,
-- `HUMAN_REVIEWED`.
+- `DETERMINISTIC`
+- `AI_ASSISTED`
+- `HUMAN_REVIEWED`
 
-Evidence lifecycle:
+Evidence statuses:
 
-```text
-PROPOSED
-→ PENDING_VALIDATION
-→ VALIDATED
-```
+- `PROPOSED`
+- `PENDING_VALIDATION`
+- `VALIDATED`
+- `REJECTED`
+- `DISPUTED`
+- `SUPERSEDED`
+- `REVOKED`
 
-Alternative terminal or corrective states:
-
-- `REJECTED`,
-- `DISPUTED`,
-- `SUPERSEDED`,
-- `REVOKED`.
-
-Language records an execution receipt, request and trace identity. It does not record physical provider, model, node or GPU details in the educational domain.
-
-AI output is an observation pending validation, not automatic educational truth.
+Language stores execution receipts and traceable identifiers, not physical provider, model, node or GPU identity. AI output is an observation pending validation, not automatic educational truth.
 
 ---
 
 ## 7. Assessment and promotion authority
 
-### 7.1 Assessment Engine
+Assessment Engine evaluates Learning Evidence, applies a versioned rubric and emits a signed/versioned `AssessmentDecision` with one of:
 
-Assessment Engine:
+- `PASS`
+- `FAIL`
+- `INCOMPLETE`
+- `REVIEW_REQUIRED`
 
-- evaluates Learning Evidence,
-- applies a versioned rubric,
-- emits `AssessmentDecision`,
-- returns one of:
-  - `PASS`,
-  - `FAIL`,
-  - `INCOMPLETE`,
-  - `REVIEW_REQUIRED`,
-- records satisfied and unsatisfied requirements,
-- never unlocks a module or level.
+It records satisfied and unsatisfied requirements and never unlocks a module or level.
 
-### 7.2 Promotion Engine
-
-Promotion Engine:
-
-- accepts only approved, versioned AssessmentDecision records,
-- applies unlock rules,
-- writes the transition,
-- creates remediation paths,
-- cannot change the assessment result.
-
-Canonical flow:
+Promotion Engine accepts only approved AssessmentDecision records, applies unlock rules, writes transitions and creates remediation paths. It cannot alter the assessment result.
 
 ```text
 Learning Evidence
@@ -485,70 +331,33 @@ Learning Evidence
 
 Mastery is multidimensional.
 
-### 8.1 Vocabulary mastery dimensions
+Vocabulary dimensions include recognition, recall, listening, production, pronunciation, orthography and contextual use.
 
-- recognition,
-- recall,
-- listening,
-- production,
-- pronunciation,
-- orthography,
-- contextual use.
+Grammar dimensions include recognition, controlled production, free production, conversation transfer and retention.
 
-### 8.2 Grammar mastery dimensions
-
-- recognition,
-- controlled production,
-- free production,
-- conversation transfer,
-- retention.
-
-A single `MASTERED` value may exist as a UI projection only. It cannot be the sole stored source state.
+A single `MASTERED` value may exist only as a UI projection.
 
 ---
 
 ## 9. Accessibility and honest assessment
 
-Accessibility accommodations must not create false mastery.
+Accommodation must not create false mastery.
 
 Measurement states:
 
-- `ASSESSED`,
-- `ACCOMMODATED`,
-- `NOT_ASSESSED`,
-- `NOT_APPLICABLE`,
-- `INSUFFICIENT_EVIDENCE`.
+- `ASSESSED`
+- `ACCOMMODATED`
+- `NOT_ASSESSED`
+- `NOT_APPLICABLE`
+- `INSUFFICIENT_EVIDENCE`
 
-Example:
-
-```text
-speaking.assessment_status = ACCOMMODATED_NOT_MEASURED
-```
-
-Not:
-
-```text
-speaking_mastery = MASTERED
-```
-
-External framework projections must not claim competence in a channel that was not measured.
+An alternative exercise may provide access without claiming a competency channel that was not actually measured. External framework projections must preserve that distinction.
 
 ---
 
 ## 10. Synchronization architecture
 
-Critical learning events are append-only.
-
-Examples:
-
-- `LESSON_STARTED`,
-- `ANSWER_SUBMITTED`,
-- `HINT_USED`,
-- `ACTIVITY_COMPLETED`,
-- `LEARNING_EVIDENCE_RECORDED`,
-- `ASSESSMENT_COMPLETED`,
-- `PROMOTION_APPROVED`,
-- `REVIEW_SCHEDULED`.
+Critical learning events are append-only. Backend Language owns canonical synchronized state.
 
 Offline event lifecycle:
 
@@ -559,92 +368,81 @@ LOCAL_PENDING
 → APPLIED
 ```
 
-Failure states:
+Failure paths:
 
-- `CONFLICTED`,
-- `REJECTED`,
-- `QUARANTINED`.
+- `CONFLICTED`
+- `REJECTED`
+- `QUARANTINED`
 
-Every event includes at minimum:
-
-- `event_id`,
-- `idempotency_key`,
-- `user_id`,
-- `tenant_partition`,
-- `organization_id` when applicable,
-- `device_id`,
-- `occurred_at`,
-- `received_at`,
-- `server_revision`,
-- `schema_version`,
-- `payload`.
-
-No progress, memory, answer, recording or assessment record may exist without a clear user owner and tenant partition.
+Every event includes identity, tenant partition, device identity, idempotency key, occurrence and receipt timestamps, server revision, schema version and payload.
 
 ---
 
 ## 11. AI usage policy
-
-The platform follows:
 
 ```text
 deterministic-first
 AI-when-pedagogically-useful
 ```
 
-Without AI, the product must still support:
+Fiszki, matching, deterministic quizzes, SRS, checkpoints, unambiguous scoring, promotion rules and review scheduling must work without AI.
 
-- flashcards,
-- matching,
-- deterministic quizzes,
-- SRS,
-- checkpoints,
-- scoring for unambiguous answers,
-- promotion rules,
-- review scheduling.
-
-AI is used for:
-
-- conversation,
-- adaptive explanations,
-- writing feedback,
-- speaking feedback,
-- contextual examples,
-- interpretation of open responses,
-- teacher planning based on validated data.
+AI is used for conversation, adaptive explanations, writing and speaking feedback, contextual examples, open-response interpretation and teacher planning based on validated data.
 
 ---
 
 ## 12. Early Vertical E2E
 
-The architecture must be validated early through a minimal reference slice:
+The first reference slice must use the following order:
 
 ```text
 Minimal Course
 → one Lesson
 → one Exercise
+→ user answer
 → Learning Evidence
-→ Assessment
-→ Hikari feedback
-→ Language
+→ AssessmentDecision
+→ Language Application Service
+→ Hikari Teacher Runtime
+→ Pre-generation Interaction Policy
 → OdynAI
 → RuntimePort
 → Shinrei
 → real model
+→ semantic AI result
+→ Post-generation Response Realizer
+→ Spoken Response Realizer
+→ Conversation Quality Gate
+→ Hikari feedback
 ```
 
 A minimal diagnostic UI may be used before full product UI exists.
 
-The vertical slice must record:
+The slice must record:
 
 - Language commit,
 - OdynAI commit,
 - Shinrei commit,
-- protocol version,
-- contract version,
+- RuntimePort protocol version,
+- Language capability-contract version,
+- content and rubric versions,
 - execution receipt,
+- request and trace IDs,
 - result,
 - test timestamp.
+
+The Early Vertical E2E plan must explicitly test:
+
+1. deterministic answer and evidence creation,
+2. AssessmentDecision generation,
+3. application-service orchestration,
+4. Language-to-OdynAI contract,
+5. RuntimePort boundary version,
+6. Shinrei physical inference,
+7. semantic-result realization,
+8. Conversation Quality Gate,
+9. display and spoken projections,
+10. failure, timeout and degraded states.
 
 ---
 
@@ -674,22 +472,23 @@ PHASE 16 Multimodality
 
 ## 14. Architecture validation gates
 
-Before this book can be treated as stable implementation reference, the branch must pass:
+Repository validation for the reviewed SHA has passed:
 
 - architecture validation,
 - typecheck,
-- tests,
-- production build,
-- Early Vertical E2E plan review,
-- cross-repository compatibility confirmation.
+- foundation lint,
+- foundation tests,
+- production build.
 
-The book remains a working architecture reference until those gates pass and the owner accepts the corresponding canon lock.
+Before this book becomes a stable implementation reference, the project still requires:
+
+- accepted Early Vertical E2E execution plan,
+- current cross-repository compatibility confirmation,
+- owner acceptance of stable-reference status.
 
 ---
 
 ## 15. Planned next chapters
-
-The next Architecture Book increments will add:
 
 1. complete domain model,
 2. aggregate boundaries and invariants,
