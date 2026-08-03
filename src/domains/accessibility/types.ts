@@ -12,6 +12,8 @@ export type SupportedLocale = {
 export type LocalizationPreferences = {
   interfaceLocale: string;
   learningLocale: string;
+  preferredScriptCode?: string;
+  preferredRegionCode?: string;
   contentFallbackLocales: string[];
   useNativeDigits: boolean;
   useLocalizedDates: boolean;
@@ -24,6 +26,7 @@ export type CaptionPreference = "system" | "on" | "off";
 export type InputPreference = "pointer" | "keyboard" | "voice" | "switch" | "mixed";
 
 export type AccessibilityProfile = {
+  tenantPartition: string;
   userId: string;
   textScale: number;
   lineHeightScale: number;
