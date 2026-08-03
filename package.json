@@ -11,13 +11,14 @@
     "lint": "eslint .",
     "lint:foundation": "eslint src/architecture src/domains/engagement src/domains/entitlements src/domains/governance src/domains/observability src/domains/sync src/domains/accessibility src/persistence scripts/validate-architecture.mjs scripts/vite.foundation-tests.config.mjs tests/foundation --rule 'prettier/prettier: off'",
     "format": "prettier --write .",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "npm run typecheck:src && npm run typecheck:tests",
+    "typecheck:src": "tsc --noEmit -p tsconfig.json",
+    "typecheck:tests": "tsc --noEmit -p tsconfig.tests.json",
     "test:foundation": "vite build --config scripts/vite.foundation-tests.config.mjs && node .foundation-tests/foundation-tests.mjs",
     "validate:architecture": "node scripts/validate-architecture.mjs",
     "validate": "npm run validate:architecture && npm run typecheck && npm run lint:foundation && npm run test:foundation && npm run build"
   },
   "dependencies": {
-    "@ai-sdk/openai-compatible": "^2.0.51",
     "@ai-sdk/react": "^3.0.210",
     "@hookform/resolvers": "^5.2.2",
     "@radix-ui/react-accordion": "^1.2.12",
