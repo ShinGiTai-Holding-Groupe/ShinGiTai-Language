@@ -14,74 +14,109 @@ const SOURCE_WEIGHT: Record<EntitlementGrant["source"], number> = {
   plan: 400,
 };
 
-function toEpoch(value?: string): number | undefined {
-  if (!value) return undefined;
+function parseOptionalTimestamp(value: string | undefined, field: string): number | undefined {
+  if (value === undefined) return undefined;
   const parsed = Date.parse(value);
-  return Number.isFinite(parsed) ? parsed : undefined;
+  if (!Number.isFinite(parsed)) throw new Error(`${field} must be a valid timestamp.`);
+  return parsed;
 }
 
-function isStarted(grant: EntitlementGrant, now: number): boolean {
-  const validFrom = toEpoch(grant.validFrom);
-  return validFrom === undefined || validFrom <= now;
+function validateGrant(grant: EntitlementGrant): void {
+  if (!grant.tenantPartition.trim()) throw new Error("tenantPartition is required.");
+  if (grant.usageLimit !== undefined && (!Number.isFinite(grant.usageLimit) || grant.usageLimit < 0)) {
+    throw new Error("usageLimit must be a finite non-negative number.");
+  }
+  const validFrom = parseOptionalTimestamp(grant.validFrom, "validFrom");
+  const validUntil = parseOptionalTimestamp(grant.validUntil, "validUntil");
+  const graceUntil = parseOptionalTimestamp(grant.graceUntil, "graceUntil");
+  if (validFrom !== undefined && validUntil !== undefined && validUntil < validFrom) {
+    throw new Error("validUntil cannot precede validFrom.");
+  }
+  if (graceUntil !== undefined && validUntil === undefined) {
+    throw new Error("graceUntil requires validUntil.");
+  }
+  if (graceUntil !== undefined && validUntil !== undefined && graceUntil < validUntil) {
+    throw new Error("graceUntil cannot precede validUntil.");
+  }
 }
 
 function rank(grant: EntitlementGrant): number {
-  return (grant.priority ?? 0) * 10_000 + SOURCE_WEIGHT[grant.source];
+  return SOURCE_WEIGHT[grant.source] * 1_000 + Math.max(-999, Math.min(999, grant.priority ?? 0));
 }
 
 function chooseGrant(grants: EntitlementGrant[]): EntitlementGrant | undefined {
   return [...grants].sort((left, right) => {
     const rankDelta = rank(right) - rank(left);
     if (rankDelta !== 0) return rankDelta;
-
-    const leftUntil = toEpoch(left.validUntil) ?? Number.POSITIVE_INFINITY;
-    const rightUntil = toEpoch(right.validUntil) ?? Number.POSITIVE_INFINITY;
+    const leftUntil = parseOptionalTimestamp(left.validUntil, "validUntil") ?? Number.POSITIVE_INFINITY;
+    const rightUntil = parseOptionalTimestamp(right.validUntil, "validUntil") ?? Number.POSITIVE_INFINITY;
     return rightUntil - leftUntil;
   })[0];
 }
 
 export function resolveEntitlement(input: EntitlementResolutionInput): EntitlementResolution {
   const now = Date.parse(input.now);
-  if (!Number.isFinite(now)) {
-    throw new Error("Entitlement resolution requires a valid ISO timestamp.");
-  }
+  if (!Number.isFinite(now)) throw new Error("Entitlement resolution requires a valid timestamp.");
+  if (!input.tenantPartition.trim()) throw new Error("tenantPartition is required.");
 
-  const candidates = input.grants.filter(
-    (grant) =>
-      grant.subjectId === input.subjectId &&
-      grant.featureKey === input.featureKey &&
-      grant.status !== "revoked" &&
-      grant.status !== "inactive" &&
-      isStarted(grant, now),
-  );
+  for (const grant of input.grants) validateGrant(grant);
+
+  const candidates = input.grants.filter((grant) => {
+    if (
+      grant.tenantPartition !== input.tenantPartition ||
+      grant.subjectId !== input.subjectId ||
+      grant.subjectType !== input.subjectType ||
+      grant.featureKey !== input.featureKey
+    ) {
+      return false;
+    }
+    if (grant.status !== "active") return false;
+    const validFrom = parseOptionalTimestamp(grant.validFrom, "validFrom");
+    return validFrom === undefined || validFrom <= now;
+  });
 
   const active = candidates.filter((grant) => {
-    const validUntil = toEpoch(grant.validUntil);
+    const validUntil = parseOptionalTimestamp(grant.validUntil, "validUntil");
     return validUntil === undefined || validUntil >= now;
   });
 
+  const activeRestrictions = active.filter(
+    (grant) => grant.source === "restriction" || grant.accessLevel === "denied",
+  );
+  const selectedRestriction = chooseGrant(activeRestrictions);
+  if (selectedRestriction) {
+    return {
+      allowed: false,
+      accessLevel: "denied",
+      validUntil: selectedRestriction.validUntil,
+      source: selectedRestriction.source,
+      entitlementId: selectedRestriction.entitlementId,
+      reason: "active_restriction",
+    };
+  }
+
   const selectedActive = chooseGrant(active);
   if (selectedActive) {
-    const denied = selectedActive.source === "restriction" || selectedActive.accessLevel === "denied";
     return {
-      allowed: !denied,
-      accessLevel: denied ? "denied" : selectedActive.accessLevel,
-      usageLimit: denied ? undefined : selectedActive.usageLimit,
+      allowed: true,
+      accessLevel: selectedActive.accessLevel,
+      usageLimit: selectedActive.usageLimit,
       validUntil: selectedActive.validUntil,
       source: selectedActive.source,
       entitlementId: selectedActive.entitlementId,
-      reason: denied ? "active_restriction" : "active_grant",
+      reason: "active_grant",
     };
   }
 
   const graceCandidates = candidates.filter((grant) => {
-    const validUntil = toEpoch(grant.validUntil);
-    const graceUntil = toEpoch(grant.graceUntil);
+    if (grant.source === "restriction" || grant.accessLevel === "denied") return false;
+    const validUntil = parseOptionalTimestamp(grant.validUntil, "validUntil");
+    const graceUntil = parseOptionalTimestamp(grant.graceUntil, "graceUntil");
     return validUntil !== undefined && validUntil < now && graceUntil !== undefined && graceUntil >= now;
   });
 
   const selectedGrace = chooseGrant(graceCandidates);
-  if (selectedGrace && selectedGrace.source !== "restriction" && selectedGrace.accessLevel !== "denied") {
+  if (selectedGrace) {
     return {
       allowed: true,
       accessLevel: "grace_period",
@@ -94,20 +129,14 @@ export function resolveEntitlement(input: EntitlementResolutionInput): Entitleme
   }
 
   const expired = chooseGrant(candidates);
-  if (expired) {
-    return {
-      allowed: false,
-      accessLevel: "expired",
-      validUntil: expired.validUntil,
-      source: expired.source,
-      entitlementId: expired.entitlementId,
-      reason: "grant_expired",
-    };
-  }
-
-  return {
-    allowed: false,
-    accessLevel: "denied",
-    reason: "no_matching_grant",
-  };
+  return expired
+    ? {
+        allowed: false,
+        accessLevel: "expired",
+        validUntil: expired.validUntil,
+        source: expired.source,
+        entitlementId: expired.entitlementId,
+        reason: "grant_expired",
+      }
+    : { allowed: false, accessLevel: "denied", reason: "no_matching_grant" };
 }
