@@ -1,6 +1,6 @@
 # ShinGiTai Language
 
-Status: Product foundation / active development  
+Status: Product foundation / active repair  
 Owner: ShinGiTai Holding Groupe  
 Product area: ArticSakuraTech
 
@@ -8,7 +8,7 @@ Product area: ArticSakuraTech
 
 ShinGiTai Language is an AI Teacher Platform led by Hikari.
 
-It is not a conventional language-learning application with a chatbot attached. Language owns the educational system, evidence, progress, assessment, content and pedagogical memory. Hikari is the central teacher-facing experience that uses those systems to guide the learner.
+It is not a conventional language-learning application with a chatbot attached. Language owns the educational system, Learning Evidence, progress, assessment, course state and durable pedagogical relationship state. Hikari is the central teacher-facing experience that uses those systems to guide the learner.
 
 The target experience is:
 
@@ -24,96 +24,92 @@ Language
 → provider / model
 ```
 
-Language must not call physical providers, models, Ollama or Shinrei directly.
+Language must not call physical providers, models, Ollama, Shinrei or provider-compatible gateways directly.
 
-Shinrei is the single AI execution runtime. Learning Core is a deterministic domain system inside Language, not a separate AI engine.
+Language uses an application-facing OdynAI port. RuntimePort is the stable execution boundary between OdynAI and Shinrei. Shinrei is the single owner of providers, physical models and inference execution.
 
-## Canonical product document
+## Single canonical product document
 
-The authoritative product, Learning Core, Hikari, evidence, assessment, memory, synchronization, accessibility, content and implementation rules are defined in:
+The sole governing product and architecture canon for ShinGiTai Language is:
 
-[`docs/architecture/language-learning-core-canonical.md`](docs/architecture/language-learning-core-canonical.md)
+[`docs/architecture/kanon1.txt`](docs/architecture/kanon1.txt)
 
-That document is canonical and governs new architecture and product decisions.
+Its current status is `REVIEWED / NOT YET LOCKED`. It becomes locked only after the gates defined inside that document are satisfied.
 
-## Product components
+`docs/architecture/language-learning-core-canonical.md` is historical and superseded. It must not be used as an implementation source.
+
+All other architecture documents are supporting working references. They may elaborate the canon but cannot override it.
+
+## Canonical bounded contexts
 
 ```text
 ShinGiTai Language
 ├── Learning Core
-│   ├── Course and Curriculum
-│   ├── Lesson Runtime
-│   ├── Exercise Engine
-│   ├── Learning Evidence
-│   ├── Assessment and Promotion
-│   ├── Vocabulary and SRS
-│   ├── Grammar
-│   ├── Learning Graph
-│   ├── Progress and Mastery
-│   ├── Pedagogical Memory
-│   ├── Persistence
-│   └── Synchronization
 ├── Hikari Teacher Runtime
+├── Hikari Human Interaction Layer
+├── Application Services
+├── Persistence / Synchronization
 ├── Content System
-├── Quick Learning
-└── Learning Experience UI
+└── UI
 ```
 
-## Core rules
+### Ownership summary
 
-- Language owns durable pedagogical memory and educational truth.
-- OdynAI owns AI-access policy and approved context projection.
-- Shinrei owns providers, models and inference and stores no durable student memory.
-- Model output is evidence or a proposal requiring validation, not automatic truth.
-- Progress and promotion must derive from versioned Learning Evidence.
-- Published educational content is immutable; corrections create new versions.
-- CEFR, JLPT, HSK, TOPIK and similar levels are projections of an internal competency graph.
-- Student records always require explicit `user_id` and `tenant_partition` ownership.
-- Deterministic functionality works without AI wherever AI is not pedagogically necessary.
-- Accessibility is a product and assessment invariant.
+- **OdynAI owns:** global Hikari Identity Core, ecosystem-wide identity continuity, global AI access and memory projection policy, product-independent Hikari behavior constraints.
+- **Language owns:** Hikari Teacher Policy, pedagogical relationship state, Session Planner, Lesson Orchestrator, Exam Runtime, Language Human Interaction Layer and Spoken Response Realizer.
+- **Learning Core owns:** educational truth, Learning Evidence, assessment, mastery, progress and course state.
+- **RuntimePort owns:** the versioned OdynAI–Shinrei execution contract.
+- **Shinrei owns:** providers, physical models, runtime capabilities and physical inference execution.
 
-## Implementation order
+## Core invariants
 
-```text
-PHASE 0   Vision Freeze
-PHASE 1   Core contracts, identifiers and events
-PHASE 2   Minimal Persistence
-PHASE 3   Minimal Course + Lesson + Exercise
-PHASE 4   Minimal Assessment
-PHASE 5   Early Vertical E2E
-PHASE 6   Vocabulary + SRS
-PHASE 7   Grammar
-PHASE 8   Learning Graph
-PHASE 9   Hikari Teacher Runtime
-PHASE 10  Natural Interaction and Voice
-PHASE 11  Full Synchronization
-PHASE 12  Content Pipeline
-PHASE 13  Quick Learning
-PHASE 14  Dashboard and full UI
-PHASE 15  Course expansion
-PHASE 16  Multimodality
-```
+- Assessment Engine evaluates evidence and issues a signed/versioned `AssessmentDecision`.
+- Promotion Engine may only apply an approved decision; it cannot alter the assessment result.
+- AI output is a proposal or observation until validated by domain policy.
+- Published educational content and issued evidence/decisions are immutable; corrections supersede rather than overwrite.
+- Backend Language owns canonical synchronized learning state.
+- Client clocks are never authoritative for canonical ordering.
+- Learner-owned records and operations require explicit tenant and user scope.
+- Accessibility accommodations never manufacture mastery in an unmeasured channel.
+- Deterministic behavior is preferred whenever AI is not pedagogically necessary.
 
-The early E2E reference slice is mandatory:
+## Early Vertical E2E reference slice
 
 ```text
 Minimal Course
-→ Lesson
-→ Exercise
+→ one Lesson
+→ one Exercise
+→ user answer
 → Learning Evidence
-→ Assessment
-→ Hikari feedback
-→ Language
+→ AssessmentDecision
+→ Language Application Service
+→ Hikari Teacher Runtime
 → OdynAI
 → RuntimePort
 → Shinrei
 → real model
+→ semantic AI result
+→ Hikari Human Interaction Layer
+→ Conversation Quality Gate
+→ Hikari feedback
 ```
 
-## Current technical status
+The slice is not considered complete until exact Language, OdynAI and Shinrei SHAs, protocol/contract versions, execution receipt, trace evidence and degraded-path results are recorded.
 
-The repository contains a working Language-to-OdynAI tutor-chat boundary and the Atoms 16–22 domain foundation for engagement, entitlements, governance, observability, synchronization, accessibility and architecture.
+## Current repair status
 
-The product remains incomplete. Learning Core, production persistence, evidence-based assessment, full Hikari Teacher Runtime, complete content and full product E2E still require implementation and validation.
+PR #13 remains draft and must not be merged while `LANG-AUDIT-023 — Atoms 16–22 Consolidated Repair` is open.
 
-No external launch, investor claim or production-readiness statement should represent the complete Language product as finished until the final product-readiness audit passes.
+Current priorities:
+
+1. consolidate the canon and supersede stale references;
+2. remove or quarantine direct-provider residue;
+3. replace Language-owned RuntimePort terminology with an OdynAI application port;
+4. enforce tenant-aware contracts and payload-aware idempotency;
+5. repair synchronization so server revision is authoritative;
+6. typecheck tests and strengthen architecture validation;
+7. consolidate machine-readable commands, events, states and errors;
+8. complete final foundation audit;
+9. execute Early Vertical E2E.
+
+CI green is not equivalent to merge-safe until these gates are enforced.
