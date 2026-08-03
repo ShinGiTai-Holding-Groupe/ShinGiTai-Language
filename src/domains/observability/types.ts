@@ -11,6 +11,7 @@ export type EventDomain =
 
 export type ProductEvent = {
   eventId: string;
+  tenantPartition: string;
   eventName: `${EventDomain}.${string}`;
   eventVersion: number;
   schemaVersion: number;
@@ -20,10 +21,12 @@ export type ProductEvent = {
   organizationId?: string;
   consentScope?: string;
   idempotencyKey?: string;
+  semanticPayloadHash?: string;
   properties: Record<string, unknown>;
 };
 
 export type TraceContext = {
+  tenantPartition: string;
   requestId: string;
   traceId: string;
   spanId: string;
@@ -60,6 +63,7 @@ export type ExperimentVariant = {
 
 export type ExperimentDefinition = {
   experimentId: string;
+  tenantPartition: string;
   status: "draft" | "running" | "paused" | "completed";
   hypothesis: string;
   variants: ExperimentVariant[];
@@ -72,6 +76,7 @@ export type ExperimentDefinition = {
 
 export type ExperimentAssignment = {
   experimentId: string;
+  tenantPartition: string;
   subjectId: string;
   variantKey: string;
   assignedAt: string;
