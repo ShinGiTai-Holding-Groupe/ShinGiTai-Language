@@ -57,15 +57,6 @@ export const LANGUAGE_MODULES: readonly ModuleDescriptor[] = [
     ownsState: false,
     allowedDependencies: [],
   },
-  {
-    moduleId: "odyn-runtime-adapter",
-    kind: "adapter",
-    layer: "infrastructure",
-    publicEntrypoint: "src/infrastructure/odyn-runtime/index",
-    ownsState: false,
-    allowedDependencies: ["architecture"],
-    forbiddenDependencies: ["engagement", "entitlements", "governance", "observability", "sync", "accessibility"],
-  },
 ];
 
 export function getModuleDescriptor(moduleId: string): ModuleDescriptor | undefined {
