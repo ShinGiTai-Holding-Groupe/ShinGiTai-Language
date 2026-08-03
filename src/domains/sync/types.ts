@@ -7,19 +7,18 @@ export type OfflineCapability =
 export type PendingCommandOperation = "create" | "update" | "delete" | "append";
 
 export type PendingCommandStatus =
-  | "pending"
-  | "processing"
+  | "local_pending"
+  | "submitted"
+  | "accepted"
+  | "applied"
   | "retry_wait"
-  | "conflict"
+  | "conflicted"
   | "quarantined"
-  | "committed"
-  | "failed";
+  | "rejected";
 
 export type ConflictStrategy =
-  | "last_write_wins"
   | "server_wins"
-  | "client_wins"
-  | "merge"
+  | "merge_noncanonical"
   | "append_only"
   | "manual_resolution"
   | "domain_specific";
@@ -30,6 +29,7 @@ export type RetryClass = "temporary" | "authentication" | "validation" | "confli
 
 export type PendingCommand<TPayload = unknown> = {
   commandId: string;
+  tenantPartition: string;
   userId: string;
   organizationId?: string;
   deviceId: string;
@@ -37,6 +37,7 @@ export type PendingCommand<TPayload = unknown> = {
   entityId: string;
   operation: PendingCommandOperation;
   payload: TPayload;
+  semanticPayloadHash: string;
   createdAt: string;
   retryCount: number;
   nextAttemptAt?: string;
@@ -47,6 +48,7 @@ export type PendingCommand<TPayload = unknown> = {
 };
 
 export type EntitySyncMetadata = {
+  tenantPartition: string;
   entityId: string;
   entityType: string;
   localRevision: number;
@@ -57,6 +59,7 @@ export type EntitySyncMetadata = {
 };
 
 export type CanonicalEntity<TValue = unknown> = {
+  tenantPartition: string;
   entityId: string;
   entityType: string;
   value: TValue;
@@ -66,6 +69,7 @@ export type CanonicalEntity<TValue = unknown> = {
 };
 
 export type LocalEntity<TValue = unknown> = {
+  tenantPartition: string;
   entityId: string;
   entityType: string;
   value: TValue;
@@ -77,19 +81,20 @@ export type LocalEntity<TValue = unknown> = {
 
 export type ConflictContext<TValue = unknown> = {
   strategy: ConflictStrategy;
+  dataClass: "canonical_learning" | "append_only_history" | "noncanonical_preference" | "draft";
   local: LocalEntity<TValue>;
   server: CanonicalEntity<TValue>;
 };
 
 export type ConflictResolution<TValue = unknown> = {
-  status: "resolved" | "manual_required";
+  status: "resolved" | "manual_required" | "rejected";
   value?: TValue;
-  source: "local" | "server" | "merged" | "appended" | "manual";
-  nextServerRevision?: number;
+  source: "server" | "merged" | "appended" | "manual";
   reason: string;
 };
 
 export type SyncBatch<TPayload = unknown> = {
+  tenantPartition: string;
   deviceId: string;
   userId: string;
   organizationId?: string;
@@ -99,13 +104,14 @@ export type SyncBatch<TPayload = unknown> = {
 
 export type SyncCommandResult = {
   commandId: string;
-  status: "committed" | "retry" | "conflict" | "rejected";
+  status: "accepted" | "applied" | "retry" | "conflicted" | "rejected" | "quarantined";
   serverRevision?: number;
   retryAfterMs?: number;
   errorCode?: string;
 };
 
 export type SyncBatchResult<TValue = unknown> = {
+  tenantPartition: string;
   acceptedAt: string;
   latestServerRevision: number;
   commandResults: SyncCommandResult[];
@@ -113,6 +119,7 @@ export type SyncBatchResult<TValue = unknown> = {
 };
 
 export type DeviceRecord = {
+  tenantPartition: string;
   deviceId: string;
   userId: string;
   deviceName: string;
@@ -124,11 +131,16 @@ export type DeviceRecord = {
 
 export type ResumeToken<TState = unknown> = {
   token: string;
+  tokenVersion: number;
+  tenantPartition: string;
   userId: string;
   deviceId: string;
   activityId: string;
   currentStep: string;
   lastSavedState: TState;
+  nonce: string;
+  signature: string;
   issuedAt: string;
   expiresAt: string;
+  revokedAt?: string;
 };
