@@ -10,10 +10,18 @@ export interface ExtensionManifest {
   readonly extensionId: string;
   readonly version: string;
   readonly apiVersion: string;
+  readonly publisherId: string;
+  readonly artifactHash: string;
+  readonly signature: string;
   readonly capabilities: readonly ExtensionCapability[];
-  readonly trusted: boolean;
   readonly enabled: boolean;
   readonly configurationSchemaVersion?: string;
+}
+
+export interface ExtensionTrustPolicy {
+  readonly allowedPublishers: ReadonlySet<string>;
+  readonly allowedArtifactHashes?: ReadonlySet<string>;
+  verifySignature(manifest: ExtensionManifest): boolean;
 }
 
 export interface ExtensionRegistration<T> {
@@ -29,7 +37,9 @@ export interface ExtensionValidationResult {
   readonly accepted: boolean;
   readonly reason?:
     | "disabled"
-    | "untrusted"
+    | "untrusted_publisher"
+    | "artifact_not_allowlisted"
+    | "signature_invalid"
     | "api_version_mismatch"
     | "duplicate_extension"
     | "capability_not_declared";
@@ -40,14 +50,25 @@ export function registerExtension<T>(
   registration: ExtensionRegistration<T>,
   requiredApiVersion: string,
   requiredCapability: ExtensionCapability,
+  trustPolicy: ExtensionTrustPolicy,
 ): {
   readonly registry: ExtensionRegistry<T>;
   readonly result: ExtensionValidationResult;
 } {
   const { manifest } = registration;
-
   if (!manifest.enabled) return { registry, result: { accepted: false, reason: "disabled" } };
-  if (!manifest.trusted) return { registry, result: { accepted: false, reason: "untrusted" } };
+  if (!trustPolicy.allowedPublishers.has(manifest.publisherId)) {
+    return { registry, result: { accepted: false, reason: "untrusted_publisher" } };
+  }
+  if (
+    trustPolicy.allowedArtifactHashes &&
+    !trustPolicy.allowedArtifactHashes.has(manifest.artifactHash)
+  ) {
+    return { registry, result: { accepted: false, reason: "artifact_not_allowlisted" } };
+  }
+  if (!manifest.signature.trim() || !trustPolicy.verifySignature(manifest)) {
+    return { registry, result: { accepted: false, reason: "signature_invalid" } };
+  }
   if (manifest.apiVersion !== requiredApiVersion) {
     return { registry, result: { accepted: false, reason: "api_version_mismatch" } };
   }
@@ -60,10 +81,7 @@ export function registerExtension<T>(
 
   const registrations = new Map(registry.registrations);
   registrations.set(manifest.extensionId, registration);
-  return {
-    registry: { registrations },
-    result: { accepted: true },
-  };
+  return { registry: { registrations }, result: { accepted: true } };
 }
 
 export function unregisterExtension<T>(
