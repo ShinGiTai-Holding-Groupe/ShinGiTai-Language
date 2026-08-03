@@ -37,50 +37,54 @@ export function resolveOfflineCapability(featureKey: string): OfflineCapability 
   return "online_preferred";
 }
 
-export function assertDeviceCanSync(device: DeviceRecord, userId: string): void {
-  if (device.userId !== userId) {
-    throw new Error("Device does not belong to the sync subject");
+export function assertDeviceCanSync(
+  device: DeviceRecord,
+  context: { tenantPartition: string; userId: string },
+): void {
+  if (device.tenantPartition !== context.tenantPartition || device.userId !== context.userId) {
+    throw new Error("Device does not belong to the tenant-scoped sync subject");
   }
-
-  if (device.trustStatus === "revoked") {
-    throw new Error("Device access has been revoked");
-  }
+  if (device.trustStatus !== "trusted") throw new Error("Only trusted devices may synchronize");
 }
 
 export function validateSyncBatch(batch: SyncBatch, device: DeviceRecord): void {
-  assertDeviceCanSync(device, batch.userId);
-
-  if (batch.deviceId !== device.deviceId) {
-    throw new Error("Sync batch device identity mismatch");
-  }
+  assertDeviceCanSync(device, batch);
+  if (batch.deviceId !== device.deviceId) throw new Error("Sync batch device identity mismatch");
 
   const commandIds = new Set<string>();
-  const idempotencyKeys = new Set<string>();
-
+  const idempotency = new Map<string, string>();
   for (const command of batch.commands) {
-    if (command.userId !== batch.userId || command.deviceId !== batch.deviceId) {
-      throw new Error(`Command ${command.commandId} crosses user or device boundary`);
+    if (
+      command.tenantPartition !== batch.tenantPartition ||
+      command.userId !== batch.userId ||
+      command.deviceId !== batch.deviceId
+    ) {
+      throw new Error(`Command ${command.commandId} crosses tenant, user or device boundary`);
     }
+    if (!command.semanticPayloadHash.trim()) throw new Error(`Command ${command.commandId} lacks payload hash`);
+    if (commandIds.has(command.commandId)) throw new Error(`Duplicate command id ${command.commandId}`);
 
-    if (commandIds.has(command.commandId)) {
-      throw new Error(`Duplicate command id ${command.commandId}`);
+    const previousHash = idempotency.get(command.idempotencyKey);
+    if (previousHash && previousHash !== command.semanticPayloadHash) {
+      throw new Error(`IDEMPOTENCY_PAYLOAD_CONFLICT:${command.idempotencyKey}`);
     }
-
-    if (idempotencyKeys.has(command.idempotencyKey)) {
-      throw new Error(`Duplicate idempotency key ${command.idempotencyKey}`);
-    }
+    if (previousHash) throw new Error(`Duplicate idempotency key ${command.idempotencyKey}`);
 
     commandIds.add(command.commandId);
-    idempotencyKeys.add(command.idempotencyKey);
+    idempotency.set(command.idempotencyKey, command.semanticPayloadHash);
   }
 }
 
 export function selectDelta<TValue>(
   entities: readonly CanonicalEntity<TValue>[],
+  tenantPartition: string,
   sinceServerRevision = 0,
 ): CanonicalEntity<TValue>[] {
   return entities
-    .filter((entity) => entity.serverRevision > sinceServerRevision)
+    .filter(
+      (entity) =>
+        entity.tenantPartition === tenantPartition && entity.serverRevision > sinceServerRevision,
+    )
     .sort((left, right) => {
       const revision = left.serverRevision - right.serverRevision;
       return revision !== 0 ? revision : left.entityId.localeCompare(right.entityId);
@@ -88,18 +92,19 @@ export function selectDelta<TValue>(
 }
 
 export function buildSyncResult<TValue>(input: {
+  tenantPartition: string;
   acceptedAt: Date;
   commandResults: SyncBatchResult<TValue>["commandResults"];
   entities: readonly CanonicalEntity<TValue>[];
   sinceServerRevision?: number;
 }): SyncBatchResult<TValue> {
-  const delta = selectDelta(input.entities, input.sinceServerRevision);
-  const latestServerRevision = input.entities.reduce(
+  const delta = selectDelta(input.entities, input.tenantPartition, input.sinceServerRevision);
+  const latestServerRevision = delta.reduce(
     (latest, entity) => Math.max(latest, entity.serverRevision),
     input.sinceServerRevision ?? 0,
   );
-
   return {
+    tenantPartition: input.tenantPartition,
     acceptedAt: input.acceptedAt.toISOString(),
     latestServerRevision,
     commandResults: [...input.commandResults],
@@ -109,11 +114,30 @@ export function buildSyncResult<TValue>(input: {
 
 export function validateResumeToken<TState>(
   token: ResumeToken<TState>,
-  context: { userId: string; deviceId: string; now: Date },
+  context: {
+    tenantPartition: string;
+    userId: string;
+    deviceId: string;
+    activityId: string;
+    now: Date;
+    verifySignature: (token: ResumeToken<TState>) => boolean;
+  },
 ): boolean {
+  const expiry = Date.parse(token.expiresAt);
+  const issued = Date.parse(token.issuedAt);
   return (
+    token.tokenVersion > 0 &&
+    token.tenantPartition === context.tenantPartition &&
     token.userId === context.userId &&
     token.deviceId === context.deviceId &&
-    new Date(token.expiresAt).getTime() > context.now.getTime()
+    token.activityId === context.activityId &&
+    token.revokedAt === undefined &&
+    token.nonce.length >= 16 &&
+    token.signature.length >= 32 &&
+    Number.isFinite(expiry) &&
+    Number.isFinite(issued) &&
+    issued <= context.now.getTime() &&
+    expiry > context.now.getTime() &&
+    context.verifySignature(token)
   );
 }
