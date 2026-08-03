@@ -1,4 +1,5 @@
 import "./persistence.test";
+import "./engagement.test";
 import "./entitlements.test";
 import "./governance.test";
 import "./observability.test";
