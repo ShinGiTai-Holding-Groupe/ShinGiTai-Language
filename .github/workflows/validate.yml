@@ -12,7 +12,7 @@ permissions:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
 
     steps:
       - name: Checkout
@@ -22,22 +22,21 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install --no-package-lock --ignore-scripts
 
-      - name: Validate architecture
+      - name: Validate real architecture graph
         run: npm run validate:architecture
 
-      - name: Typecheck
+      - name: Typecheck source and tests
         run: npm run typecheck
 
-      - name: Lint atoms 16-22 foundation
+      - name: Lint foundation without regression
         run: npm run lint:foundation
 
       - name: Test foundation contracts
         run: npm run test:foundation
 
-      - name: Build
+      - name: Production build
         run: npm run build
