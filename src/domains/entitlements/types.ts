@@ -12,11 +12,11 @@ export type EntitlementSource =
   | "restriction";
 
 export type EntitlementStatus = "active" | "inactive" | "revoked" | "expired";
-
 export type FeatureKey = string;
 
 export type EntitlementGrant = {
   entitlementId: string;
+  tenantPartition: string;
   subjectId: string;
   subjectType: EntitlementSubjectType;
   featureKey: FeatureKey;
@@ -31,7 +31,9 @@ export type EntitlementGrant = {
 };
 
 export type EntitlementResolutionInput = {
+  tenantPartition: string;
   subjectId: string;
+  subjectType: EntitlementSubjectType;
   featureKey: FeatureKey;
   now: string;
   grants: EntitlementGrant[];
@@ -49,6 +51,7 @@ export type EntitlementResolution = {
     | "active_restriction"
     | "within_grace_period"
     | "grant_expired"
+    | "invalid_grant"
     | "no_matching_grant";
 };
 
@@ -65,11 +68,14 @@ export type UsageReservationStatus = "reserved" | "committed" | "released" | "ex
 
 export type UsageReservation = {
   reservationId: string;
+  tenantPartition: string;
   subjectId: string;
+  subjectType: EntitlementSubjectType;
   featureKey: FeatureKey;
   metric: UsageMetric;
   amount: number;
   idempotencyKey: string;
+  semanticPayloadHash: string;
   status: UsageReservationStatus;
   createdAt: string;
   expiresAt: string;
@@ -79,11 +85,14 @@ export type UsageReservation = {
 
 export type UsageLedgerEntry = {
   entryId: string;
+  tenantPartition: string;
   subjectId: string;
+  subjectType: EntitlementSubjectType;
   featureKey: FeatureKey;
   metric: UsageMetric;
   amount: number;
   reservationId: string;
   idempotencyKey: string;
+  semanticPayloadHash: string;
   committedAt: string;
 };
