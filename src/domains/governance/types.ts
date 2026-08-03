@@ -18,10 +18,15 @@ export type ConsentType =
   | "session_recording";
 
 export type ConsentSource = "onboarding" | "settings" | "admin" | "migration";
+export type ConsentSubjectType = "user" | "organization";
 
 export type ConsentRecord = {
   consentId: string;
-  userId: string;
+  tenantPartition: string;
+  subjectType: ConsentSubjectType;
+  subjectId: string;
+  userId?: string;
+  organizationId?: string;
   consentType: ConsentType;
   version: string;
   scope: string;
@@ -33,7 +38,7 @@ export type ConsentRecord = {
 export type ConsentRequirement = {
   consentType: ConsentType;
   minimumVersion?: string;
-  scope?: string;
+  acceptedScopes?: readonly string[];
 };
 
 export type RetentionPolicy = {
@@ -46,6 +51,7 @@ export type RetentionPolicy = {
 
 export type GovernedRecord = {
   recordId: string;
+  tenantPartition: string;
   userId?: string;
   organizationId?: string;
   dataType: string;
@@ -59,6 +65,7 @@ export type AuditActorType = "user" | "admin" | "service" | "system";
 
 export type AuditLogEntry = {
   auditId: string;
+  tenantPartition: string;
   occurredAt: string;
   actorType: AuditActorType;
   actorId: string;
@@ -66,6 +73,7 @@ export type AuditLogEntry = {
   resourceType: string;
   resourceId: string;
   requestId: string;
+  semanticPayloadHash: string;
   reason?: string;
   before?: unknown;
   after?: unknown;
@@ -80,6 +88,8 @@ export type ProcessingDecision = {
     | "consent_missing"
     | "consent_withdrawn"
     | "version_outdated"
-    | "scope_mismatch";
+    | "scope_mismatch"
+    | "subject_mismatch"
+    | "tenant_mismatch";
   missing?: ConsentRequirement[];
 };
