@@ -9,22 +9,13 @@ export type NotificationType =
   | "achievement";
 
 export type NotificationPriority = "critical" | "important" | "normal" | "optional";
+export type NotificationChannel = "in_app" | "push" | "email" | "desktop" | "calendar" | "teacher_dashboard";
 
-export type NotificationChannel =
-  | "in_app"
-  | "push"
-  | "email"
-  | "desktop"
-  | "calendar"
-  | "teacher_dashboard";
-
-export type QuietHours = {
-  enabled: boolean;
-  startMinute: number;
-  endMinute: number;
-};
+export type QuietHours = { enabled: boolean; startMinute: number; endMinute: number };
 
 export type NotificationPreferences = {
+  tenantPartition: string;
+  userId: string;
   enabledChannels: ReadonlySet<NotificationChannel>;
   disabledTypes: ReadonlySet<NotificationType>;
   quietHours: QuietHours;
@@ -34,6 +25,8 @@ export type NotificationPreferences = {
 
 export type NotificationCandidate = {
   notificationId: string;
+  tenantPartition: string;
+  userId: string;
   type: NotificationType;
   priority: NotificationPriority;
   requestedChannels: readonly NotificationChannel[];
@@ -41,6 +34,9 @@ export type NotificationCandidate = {
 };
 
 export type NotificationHistoryEntry = {
+  notificationId: string;
+  tenantPartition: string;
+  userId: string;
   sentAt: Date;
   channel: NotificationChannel;
   type: NotificationType;
@@ -52,13 +48,10 @@ export type NotificationDecisionReason =
   | "channel_disabled"
   | "quiet_hours"
   | "daily_limit_reached"
-  | "no_available_channel";
+  | "no_available_channel"
+  | "tenant_mismatch";
 
-export type NotificationDecision = {
-  allowed: boolean;
-  channels: readonly NotificationChannel[];
-  reason: NotificationDecisionReason;
-};
+export type NotificationDecision = { allowed: boolean; channels: readonly NotificationChannel[]; reason: NotificationDecisionReason };
 
 export type LearningActivityEvidence = {
   meaningfulLearningDays: number;
@@ -66,23 +59,17 @@ export type LearningActivityEvidence = {
   completedRecoverySessions: number;
 };
 
-export type ExperienceSource =
-  | "lesson"
-  | "review"
-  | "assessment"
-  | "speaking"
-  | "writing"
-  | "recovery"
-  | "achievement";
+export type ExperienceSource = "lesson" | "review" | "assessment" | "speaking" | "writing" | "recovery" | "achievement";
 
 export type ExperienceGrantRequest = {
+  tenantPartition: string;
+  userId: string;
   source: ExperienceSource;
   sourceId: string;
   baseAmount: number;
+  idempotencyKey: string;
+  semanticPayloadHash: string;
   occurredAt: Date;
 };
 
-export type ExperienceLedgerEntry = ExperienceGrantRequest & {
-  entryId: string;
-  grantedAmount: number;
-};
+export type ExperienceLedgerEntry = ExperienceGrantRequest & { entryId: string; grantedAmount: number };
