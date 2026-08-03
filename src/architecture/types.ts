@@ -34,32 +34,45 @@ export interface BoundaryViolation {
     | "dependency_explicitly_forbidden"
     | "private_entrypoint_import"
     | "provider_dependency_forbidden"
-    | "cycle_detected";
+    | "cycle_detected"
+    | "missing_public_entrypoint";
   readonly sourceModuleId: string;
   readonly targetModuleId?: string;
   readonly importedPath?: string;
   readonly message: string;
 }
 
-export interface PortRequestContext {
-  readonly requestId: string;
-  readonly userId?: string;
+export interface TenantContext {
+  readonly tenantPartition: string;
+  readonly userId: string;
   readonly organizationId?: string;
+  readonly actorId: string;
+  readonly actorType: "learner" | "hikari_teacher_runtime" | "system" | "administrator";
+}
+
+export interface PortRequestContext extends TenantContext {
+  readonly requestId: string;
+  readonly traceId?: string;
   readonly locale?: string;
   readonly signal?: AbortSignal;
 }
 
-export interface PortResult<T> {
-  readonly ok: boolean;
-  readonly value?: T;
-  readonly error?: {
-    readonly code: string;
-    readonly message: string;
-    readonly retryable: boolean;
-  };
-}
+export type PortResult<T> =
+  | {
+      readonly ok: true;
+      readonly value: T;
+      readonly executionReceiptId?: string;
+    }
+  | {
+      readonly ok: false;
+      readonly error: {
+        readonly code: string;
+        readonly message: string;
+        readonly retryable: boolean;
+      };
+    };
 
-export interface RuntimePort<TRequest, TResponse> {
+export interface OdynAiApplicationPort<TRequest, TResponse> {
   execute(request: TRequest, context: PortRequestContext): Promise<PortResult<TResponse>>;
 }
 
@@ -72,7 +85,7 @@ export interface IdGeneratorPort {
 }
 
 export interface KeyValuePort<T> {
-  get(key: string): Promise<T | undefined>;
-  set(key: string, value: T): Promise<void>;
-  delete(key: string): Promise<void>;
+  get(key: string, context: TenantContext): Promise<T | undefined>;
+  set(key: string, value: T, context: TenantContext): Promise<void>;
+  delete(key: string, context: TenantContext): Promise<void>;
 }
