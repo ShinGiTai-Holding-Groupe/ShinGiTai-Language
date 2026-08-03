@@ -1,0 +1,42 @@
+name: Validate
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install --no-package-lock --ignore-scripts
+
+      - name: Validate real architecture graph
+        run: npm run validate:architecture
+
+      - name: Typecheck source and tests
+        run: npm run typecheck
+
+      - name: Lint foundation without regression
+        run: npm run lint:foundation
+
+      - name: Test foundation contracts
+        run: npm run test:foundation
+
+      - name: Production build
+        run: npm run build
