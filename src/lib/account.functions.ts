@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { Database } from "@/integrations/supabase/types";
 import { evaluateAchievements } from "@/lib/gamification.server";
 
 const CefrLevel = z.enum(["A1", "A2", "B1", "B2", "C1", "C2"]);
@@ -137,7 +138,9 @@ export const getAchievements = createServerFn({ method: "GET" })
       ]),
     );
 
-    const items = ((catalogRes.data ?? []) as any[]).map((a) => ({
+    const items = (
+      (catalogRes.data ?? []) as Database["public"]["Tables"]["achievements"]["Row"][]
+    ).map((a) => ({
       ...a,
       earned: earnedMap.has(a.id),
       earned_at: earnedMap.get(a.id) ?? null,

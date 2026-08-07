@@ -1,14 +1,13 @@
 import { createServerFn } from "@tanstack/react-start";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { Database } from "@/integrations/supabase/types";
 
 const CefrLevel = z.enum(["A1", "A2", "B1", "B2", "C1", "C2"]);
 
 // Resolve the learner's native language name (defaults to English).
-async function getNativeName(
-  supabase: { from: (t: string) => any },
-  userId: string,
-): Promise<string> {
+async function getNativeName(supabase: SupabaseClient<Database>, userId: string): Promise<string> {
   const { data: profile } = await supabase
     .from("profiles")
     .select("native_language_code")
@@ -285,7 +284,7 @@ export const createStarterDeck = createServerFn({ method: "POST" })
     );
   });
 
-async function bumpXp(supabase: { from: (t: string) => any }, userId: string, amount: number) {
+async function bumpXp(supabase: SupabaseClient<Database>, userId: string, amount: number) {
   const { data: stats } = await supabase
     .from("user_stats")
     .select("total_xp")

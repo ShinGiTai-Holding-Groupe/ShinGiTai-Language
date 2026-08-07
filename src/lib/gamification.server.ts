@@ -1,7 +1,9 @@
 // Shared server-side gamification helpers: XP + streaks + achievements.
 // Not a server function file — imported by server functions only.
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/integrations/supabase/types";
 
-type AnySupabase = { from: (t: string) => any };
+type AnySupabase = SupabaseClient<Database>;
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
