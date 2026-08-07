@@ -70,7 +70,9 @@ export function TodaysFocusCard({
     <section className="mt-6 rounded-3xl border border-border bg-card p-6 shadow-soft">
       <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-wide text-primary">Today's focus</p>
+          <p className="text-sm font-semibold uppercase tracking-wide text-primary">
+            Today's focus
+          </p>
           <h2 className="mt-2 text-2xl font-bold tracking-tight">
             {isLoading ? <Skeleton className="h-8 w-80" /> : focusTitle}
           </h2>

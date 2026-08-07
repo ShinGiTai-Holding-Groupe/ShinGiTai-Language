@@ -3,7 +3,16 @@ import type { FormEvent } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
-import { AlertCircle, Volume2, VolumeX, Square, Loader2, MessageCircle, UserRound, BookOpen } from "lucide-react";
+import {
+  AlertCircle,
+  Volume2,
+  VolumeX,
+  Square,
+  Loader2,
+  MessageCircle,
+  UserRound,
+  BookOpen,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -138,8 +147,7 @@ function teacherMessageContentClass(role: UIMessage["role"]) {
   return "max-w-[88%] leading-6";
 }
 
-const teacherMessageResponseClass =
-  "leading-7 [&_li]:my-1 [&_ol]:my-2 [&_p]:my-2 [&_ul]:my-2";
+const teacherMessageResponseClass = "leading-7 [&_li]:my-1 [&_ol]:my-2 [&_p]:my-2 [&_ul]:my-2";
 
 export function TutorChatWindow({
   conversationId,
@@ -210,8 +218,14 @@ export function TutorChatWindow({
   const exercisePrompt = teacherExercisePrompt(languageLabel, safeLevel);
   const lastMessage = messages[messages.length - 1];
   const lastMessageIsAssistant = lastMessage?.role === "assistant";
-  const shouldShowExercisePrompt = isTeacher && messages.length >= 2 && messages.length < 6 && status === "ready" && lastMessageIsAssistant;
-  const shouldShowReviewPrompt = isTeacher && messages.length >= 6 && status === "ready" && lastMessageIsAssistant;
+  const shouldShowExercisePrompt =
+    isTeacher &&
+    messages.length >= 2 &&
+    messages.length < 6 &&
+    status === "ready" &&
+    lastMessageIsAssistant;
+  const shouldShowReviewPrompt =
+    isTeacher && messages.length >= 6 && status === "ready" && lastMessageIsAssistant;
   const inputPlaceholder = isTeacher
     ? teacherInputPlaceholder(messages.length, isBusy)
     : "Type your message…";
@@ -280,7 +294,12 @@ export function TutorChatWindow({
             {isTeacher && (
               <TeacherAvatarPicker
                 trigger={
-                  <Button type="button" variant="ghost" size="icon-sm" aria-label="Change teacher avatar">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-sm"
+                    aria-label="Change teacher avatar"
+                  >
                     <UserRound className="h-4 w-4" />
                   </Button>
                 }
@@ -311,9 +330,15 @@ export function TutorChatWindow({
               <p className="mt-0.5 text-muted-foreground">{lessonFlowHint.body}</p>
             </div>
             <div className="mt-3 flex flex-wrap gap-2 text-xs text-muted-foreground">
-              <span className="rounded-full border border-border bg-card px-2.5 py-1">Follow the teacher prompt</span>
-              <span className="rounded-full border border-border bg-card px-2.5 py-1">Answer in short steps</span>
-              <span className="rounded-full border border-border bg-card px-2.5 py-1">Ask for examples anytime</span>
+              <span className="rounded-full border border-border bg-card px-2.5 py-1">
+                Follow the teacher prompt
+              </span>
+              <span className="rounded-full border border-border bg-card px-2.5 py-1">
+                Answer in short steps
+              </span>
+              <span className="rounded-full border border-border bg-card px-2.5 py-1">
+                Ask for examples anytime
+              </span>
             </div>
             <p className="mt-2 text-xs text-muted-foreground" aria-live="polite">
               {voiceHelper}
@@ -324,33 +349,40 @@ export function TutorChatWindow({
 
       <Conversation className="flex-1">
         <ConversationContent className="mx-auto w-full max-w-3xl">
-          {messages.length === 0 && (
-            isTeacher ? (
+          {messages.length === 0 &&
+            (isTeacher ? (
               <div className="mx-auto max-w-xl py-10 text-center">
                 <p className="text-sm font-semibold text-foreground">Ready for your first step?</p>
                 <p className="mt-2 text-sm text-muted-foreground">
-                  Send the starter message below and the teacher will begin with a short explanation, one small exercise, and corrections after your answer.
+                  Send the starter message below and the teacher will begin with a short
+                  explanation, one small exercise, and corrections after your answer.
                 </p>
                 <div className="mt-5 rounded-2xl border border-border bg-card p-4 text-left shadow-soft">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-primary">Starter message</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-primary">
+                    Starter message
+                  </p>
                   <p className="mt-2 text-sm text-foreground">{starterPrompt}</p>
                 </div>
                 <p className="mt-3 text-xs text-muted-foreground">
-                  You can also ask for easier examples, slower pacing, or more speaking practice at any time.
+                  You can also ask for easier examples, slower pacing, or more speaking practice at
+                  any time.
                 </p>
               </div>
             ) : (
               <div className="py-10 text-center text-sm text-muted-foreground">
                 Say hello to start practicing! Try writing a greeting in your target language.
               </div>
-            )
-          )}
+            ))}
           {messages.map((m) => {
             const text = textOf(m);
             return (
               <Message from={m.role} key={m.id} className={isTeacher ? "max-w-full" : undefined}>
-                <MessageContent className={isTeacher ? teacherMessageContentClass(m.role) : undefined}>
-                  <MessageResponse className={isTeacher ? teacherMessageResponseClass : undefined}>{text}</MessageResponse>
+                <MessageContent
+                  className={isTeacher ? teacherMessageContentClass(m.role) : undefined}
+                >
+                  <MessageResponse className={isTeacher ? teacherMessageResponseClass : undefined}>
+                    {text}
+                  </MessageResponse>
                 </MessageContent>
                 {m.role === "assistant" && text && (
                   <MessageActions>
@@ -373,20 +405,30 @@ export function TutorChatWindow({
           })}
           {shouldShowExercisePrompt && (
             <div className="mx-auto my-5 max-w-xl rounded-2xl border border-border bg-card p-4 text-left shadow-soft">
-              <p className="text-xs font-semibold uppercase tracking-wide text-primary">Need the next exercise?</p>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Use this when the explanation is clear and you want one focused task instead of more theory.
+              <p className="text-xs font-semibold uppercase tracking-wide text-primary">
+                Need the next exercise?
               </p>
-              <p className="mt-3 rounded-xl bg-muted px-3 py-2 text-sm text-foreground">{exercisePrompt}</p>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Use this when the explanation is clear and you want one focused task instead of more
+                theory.
+              </p>
+              <p className="mt-3 rounded-xl bg-muted px-3 py-2 text-sm text-foreground">
+                {exercisePrompt}
+              </p>
             </div>
           )}
           {shouldShowReviewPrompt && (
             <div className="mx-auto my-5 max-w-xl rounded-2xl border border-border bg-card p-4 text-left shadow-soft">
-              <p className="text-xs font-semibold uppercase tracking-wide text-primary">Ready for a lesson review?</p>
-              <p className="mt-2 text-sm text-muted-foreground">
-                The teacher has enough context now. Ask for a recap while the latest correction is still fresh.
+              <p className="text-xs font-semibold uppercase tracking-wide text-primary">
+                Ready for a lesson review?
               </p>
-              <p className="mt-3 rounded-xl bg-muted px-3 py-2 text-sm text-foreground">{reviewPrompt}</p>
+              <p className="mt-2 text-sm text-muted-foreground">
+                The teacher has enough context now. Ask for a recap while the latest correction is
+                still fresh.
+              </p>
+              <p className="mt-3 rounded-xl bg-muted px-3 py-2 text-sm text-foreground">
+                {reviewPrompt}
+              </p>
             </div>
           )}
           {status === "submitted" && (
@@ -402,20 +444,14 @@ export function TutorChatWindow({
 
       <div className="border-t border-border p-3">
         <PromptInput onSubmit={handleSubmit} className="mx-auto max-w-3xl">
-          <PromptInputTextarea
-            ref={inputRef}
-            placeholder={inputPlaceholder}
-            disabled={isBusy}
-          />
+          <PromptInputTextarea ref={inputRef} placeholder={inputPlaceholder} disabled={isBusy} />
           <PromptInputFooter className="items-center justify-between gap-3">
-            {isTeacher && (
-              <p className="min-w-0 text-xs text-muted-foreground">{inputHint}</p>
-            )}
+            {isTeacher && <p className="min-w-0 text-xs text-muted-foreground">{inputHint}</p>}
             <PromptInputSubmit status={status} disabled={isBusy} />
           </PromptInputFooter>
         </PromptInput>
-        {error && (
-          isTeacher ? (
+        {error &&
+          (isTeacher ? (
             <div
               role="alert"
               className="mx-auto mt-3 flex max-w-3xl gap-3 rounded-2xl border border-destructive/30 bg-destructive/5 p-3 text-left"
@@ -431,8 +467,7 @@ export function TutorChatWindow({
             <p className="mx-auto mt-2 max-w-3xl text-center text-xs text-destructive" role="alert">
               Failed to get a response. Please try again.
             </p>
-          )
-        )}
+          ))}
       </div>
     </div>
   );

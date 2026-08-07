@@ -86,45 +86,47 @@ function AchievementsPage() {
         </div>
 
         <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {isLoading ? (
-            Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-32 rounded-2xl" />)
-          ) : (
-            items.map((a) => {
-              const Icon = ICONS[a.icon] ?? Award;
-              return (
-                <div
-                  key={a.id}
-                  className={cn(
-                    "relative rounded-2xl border p-5 shadow-soft transition-all",
-                    a.earned
-                      ? "border-primary/40 bg-card"
-                      : "border-border bg-muted/30 opacity-80",
-                  )}
-                >
-                  <div className="flex items-start justify-between">
-                    <div
-                      className={cn(
-                        "flex h-12 w-12 items-center justify-center rounded-xl",
-                        a.earned ? "gradient-warm text-accent-foreground" : "bg-muted text-muted-foreground",
-                      )}
-                    >
-                      {a.earned ? <Icon className="h-6 w-6" /> : <Lock className="h-5 w-5" />}
+          {isLoading
+            ? Array.from({ length: 6 }).map((_, i) => (
+                <Skeleton key={i} className="h-32 rounded-2xl" />
+              ))
+            : items.map((a) => {
+                const Icon = ICONS[a.icon] ?? Award;
+                return (
+                  <div
+                    key={a.id}
+                    className={cn(
+                      "relative rounded-2xl border p-5 shadow-soft transition-all",
+                      a.earned
+                        ? "border-primary/40 bg-card"
+                        : "border-border bg-muted/30 opacity-80",
+                    )}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div
+                        className={cn(
+                          "flex h-12 w-12 items-center justify-center rounded-xl",
+                          a.earned
+                            ? "gradient-warm text-accent-foreground"
+                            : "bg-muted text-muted-foreground",
+                        )}
+                      >
+                        {a.earned ? <Icon className="h-6 w-6" /> : <Lock className="h-5 w-5" />}
+                      </div>
+                      <span className="rounded-full bg-gold/15 px-2.5 py-1 text-xs font-semibold text-gold">
+                        +{a.xp_reward} XP
+                      </span>
                     </div>
-                    <span className="rounded-full bg-gold/15 px-2.5 py-1 text-xs font-semibold text-gold">
-                      +{a.xp_reward} XP
-                    </span>
+                    <p className="mt-3 font-semibold">{a.title}</p>
+                    <p className="text-sm text-muted-foreground">{a.description}</p>
+                    {a.earned && a.earned_at && (
+                      <p className="mt-2 text-xs font-medium text-primary">
+                        Unlocked {new Date(a.earned_at).toLocaleDateString()}
+                      </p>
+                    )}
                   </div>
-                  <p className="mt-3 font-semibold">{a.title}</p>
-                  <p className="text-sm text-muted-foreground">{a.description}</p>
-                  {a.earned && a.earned_at && (
-                    <p className="mt-2 text-xs font-medium text-primary">
-                      Unlocked {new Date(a.earned_at).toLocaleDateString()}
-                    </p>
-                  )}
-                </div>
-              );
-            })
-          )}
+                );
+              })}
         </div>
       </main>
     </div>

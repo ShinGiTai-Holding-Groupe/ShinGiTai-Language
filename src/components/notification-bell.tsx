@@ -57,8 +57,7 @@ export function NotificationBell() {
   const items = data?.items ?? [];
   const unread = data?.unread ?? 0;
 
-  const invalidate = () =>
-    queryClient.invalidateQueries({ queryKey: ["notifications", user?.id] });
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: ["notifications", user?.id] });
 
   const handleOpen = async (open: boolean) => {
     if (open && unread > 0) {

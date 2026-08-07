@@ -1,12 +1,6 @@
 import { cn } from "@/lib/utils";
 
-export type AvatarVariant =
-  | "nova"
-  | "hoot"
-  | "bao"
-  | "kit"
-  | "milo"
-  | "sage";
+export type AvatarVariant = "nova" | "hoot" | "bao" | "kit" | "milo" | "sage";
 
 type AvatarConfig = {
   id: AvatarVariant;
@@ -81,7 +75,15 @@ export function getAvatarConfig(variant?: string | null): AvatarConfig {
 }
 
 /** Ears / top decorations that make each character distinctive. */
-function Ears({ kind, accent, face }: { kind: AvatarConfig["kind"]; accent: string; face: string }) {
+function Ears({
+  kind,
+  accent,
+  face,
+}: {
+  kind: AvatarConfig["kind"];
+  accent: string;
+  face: string;
+}) {
   switch (kind) {
     case "owl":
       return (
@@ -124,11 +126,7 @@ function Ears({ kind, accent, face }: { kind: AvatarConfig["kind"]; accent: stri
       );
     case "sage":
       return (
-        <path
-          d="M22 30 Q50 6 78 30 Q66 20 50 20 Q34 20 22 30 Z"
-          fill={accent}
-          opacity="0.85"
-        />
+        <path d="M22 30 Q50 6 78 30 Q66 20 50 20 Q34 20 22 30 Z" fill={accent} opacity="0.85" />
       );
     default:
       return null;

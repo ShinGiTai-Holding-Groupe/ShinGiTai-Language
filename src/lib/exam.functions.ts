@@ -43,7 +43,12 @@ export const startExam = createServerFn({ method: "POST" })
       nativeName = nativeLang?.name ?? nativeName;
     }
 
-    const questions = await generateExamQuestions(languageName, nativeName, data.level, QUESTION_COUNT);
+    const questions = await generateExamQuestions(
+      languageName,
+      nativeName,
+      data.level,
+      QUESTION_COUNT,
+    );
     if (questions.length < 4) {
       throw new Error("Could not generate the exam right now. Please try again.");
     }
@@ -182,10 +187,7 @@ export const submitExam = createServerFn({ method: "POST" })
     for (let i = 0; i < qs.length; i++) {
       const ans = data.answers[i] ?? null;
       if (ans !== null && ans === qs[i].correct_index) correct += 1;
-      await supabaseAdmin
-        .from("exam_questions")
-        .update({ user_answer: ans })
-        .eq("id", qs[i].id);
+      await supabaseAdmin.from("exam_questions").update({ user_answer: ans }).eq("id", qs[i].id);
     }
 
     const total = qs.length || session.total_questions || 1;

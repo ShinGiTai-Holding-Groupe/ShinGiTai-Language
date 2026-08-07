@@ -138,9 +138,7 @@ function ExamsPage() {
                   {passedThis && <Award className="h-5 w-5 text-gold" />}
                 </div>
                 <p className="mt-3 font-semibold">{lvl.label}</p>
-                <p className="text-xs text-muted-foreground">
-                  12 questions · 60% to pass
-                </p>
+                <p className="text-xs text-muted-foreground">12 questions · 60% to pass</p>
                 <Button
                   className="mt-4 w-full"
                   variant={passedThis ? "soft" : "hero"}

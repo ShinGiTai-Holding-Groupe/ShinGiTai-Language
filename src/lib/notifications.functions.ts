@@ -32,9 +32,7 @@ export const listNotifications = createServerFn({ method: "GET" })
 /** Marks one notification (or all when no id) as read. */
 export const markNotificationsRead = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
-    z.object({ id: z.string().uuid().optional() }).parse(input),
-  )
+  .inputValidator((input: unknown) => z.object({ id: z.string().uuid().optional() }).parse(input))
   .handler(async ({ context, data }) => {
     const { supabase, userId } = context;
     let q = supabase.from("notifications").update({ is_read: true }).eq("user_id", userId);

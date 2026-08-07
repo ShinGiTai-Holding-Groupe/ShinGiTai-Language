@@ -16,8 +16,8 @@ function TutorEmpty() {
       />
       <h2 className="text-2xl font-bold tracking-tight">Your AI conversation tutor</h2>
       <p className="mt-2 max-w-md text-muted-foreground">
-        Practice real conversations in any language. The tutor adapts to your level, corrects
-        your mistakes, and keeps you talking. Pick a conversation on the left or start a new one.
+        Practice real conversations in any language. The tutor adapts to your level, corrects your
+        mistakes, and keeps you talking. Pick a conversation on the left or start a new one.
       </p>
       <div className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-sm font-medium text-primary">
         <MessageCircle className="h-4 w-4" /> Select or create a conversation to begin

@@ -5,9 +5,7 @@ import { bumpXp, evaluateAchievements } from "@/lib/gamification.server";
 
 export const markLessonComplete = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
-    z.object({ lesson_id: z.string().uuid() }).parse(input),
-  )
+  .inputValidator((input: unknown) => z.object({ lesson_id: z.string().uuid() }).parse(input))
   .handler(async ({ context, data }) => {
     const { supabase, userId } = context;
 

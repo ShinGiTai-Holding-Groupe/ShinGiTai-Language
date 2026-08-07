@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { Database } from "@/integrations/supabase/types";
 import { evaluateAchievements } from "@/lib/gamification.server";
 
 const CefrLevel = z.enum(["A1", "A2", "B1", "B2", "C1", "C2"]);
@@ -83,7 +84,9 @@ export const getMyAccount = createServerFn({ method: "GET" })
     const [profileRes, rolesRes, subRes] = await Promise.all([
       supabase
         .from("profiles")
-        .select("display_name, username, avatar_url, native_language_code, daily_goal_minutes, onboarding_completed, teacher_avatar")
+        .select(
+          "display_name, username, avatar_url, native_language_code, daily_goal_minutes, onboarding_completed, teacher_avatar",
+        )
         .eq("id", userId)
         .maybeSingle(),
 
@@ -125,10 +128,7 @@ export const getAchievements = createServerFn({ method: "GET" })
 
     const [catalogRes, earnedRes] = await Promise.all([
       supabase.from("achievements").select("*").order("sort_order"),
-      supabase
-        .from("user_achievements")
-        .select("achievement_id, earned_at")
-        .eq("user_id", userId),
+      supabase.from("user_achievements").select("achievement_id, earned_at").eq("user_id", userId),
     ]);
 
     const earnedMap = new Map(
@@ -138,7 +138,9 @@ export const getAchievements = createServerFn({ method: "GET" })
       ]),
     );
 
-    const items = ((catalogRes.data ?? []) as any[]).map((a) => ({
+    const items = (
+      (catalogRes.data ?? []) as Database["public"]["Tables"]["achievements"]["Row"][]
+    ).map((a) => ({
       ...a,
       earned: earnedMap.has(a.id),
       earned_at: earnedMap.get(a.id) ?? null,
@@ -150,15 +152,11 @@ export const getAchievements = createServerFn({ method: "GET" })
 /** Demo subscription toggle. Real Stripe checkout can replace this server fn. */
 export const setSubscription = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
-    z.object({ tier: z.enum(["free", "pro"]) }).parse(input),
-  )
+  .inputValidator((input: unknown) => z.object({ tier: z.enum(["free", "pro"]) }).parse(input))
   .handler(async ({ context, data }) => {
     const { supabase, userId } = context;
     const periodEnd =
-      data.tier === "pro"
-        ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
-        : null;
+      data.tier === "pro" ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() : null;
 
     const { error } = await supabase.from("subscribers").upsert(
       {

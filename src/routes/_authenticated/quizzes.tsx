@@ -11,8 +11,12 @@ export const Route = createFileRoute("/_authenticated/quizzes")({
 });
 
 type Quiz = {
-  id: string; title: string; description: string | null;
-  level: string; language_code: string; xp_reward: number;
+  id: string;
+  title: string;
+  description: string | null;
+  level: string;
+  language_code: string;
+  xp_reward: number;
 };
 
 function QuizzesPage() {
@@ -63,7 +67,8 @@ function QuizzesPage() {
                 <p className="mt-3 font-semibold">{q.title}</p>
                 {q.description && <p className="text-sm text-muted-foreground">{q.description}</p>}
                 <span className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-primary">
-                  Start · +{q.xp_reward} XP <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                  Start · +{q.xp_reward} XP{" "}
+                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
                 </span>
               </Link>
             ))

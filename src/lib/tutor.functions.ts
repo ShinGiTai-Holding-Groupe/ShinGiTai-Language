@@ -2,15 +2,12 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-
 const CefrLevel = z.enum(["A1", "A2", "B1", "B2", "C1", "C2"]);
 const Mode = z.enum(["conversation", "teacher"]);
 
 export const listConversations = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
-    z.object({ mode: Mode.optional() }).parse(input ?? {}),
-  )
+  .inputValidator((input: unknown) => z.object({ mode: Mode.optional() }).parse(input ?? {}))
   .handler(async ({ context, data }) => {
     const { supabase, userId } = context;
     let query = supabase

@@ -1,14 +1,13 @@
 import { createServerFn } from "@tanstack/react-start";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { Database } from "@/integrations/supabase/types";
 
 const CefrLevel = z.enum(["A1", "A2", "B1", "B2", "C1", "C2"]);
 
 // Resolve the learner's native language name (defaults to English).
-async function getNativeName(
-  supabase: { from: (t: string) => any },
-  userId: string,
-): Promise<string> {
+async function getNativeName(supabase: SupabaseClient<Database>, userId: string): Promise<string> {
   const { data: profile } = await supabase
     .from("profiles")
     .select("native_language_code")
@@ -32,7 +31,6 @@ const STARTER_TOPICS: Record<string, string> = {
   C1: "advanced vocabulary: politics, economics, science, idioms, formal register and precise synonyms",
   C2: "near-native mastery: rare idioms, literary and academic vocabulary, subtle connotations and collocations",
 };
-
 
 export const listDecks = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -226,7 +224,10 @@ export const reviewCard = createServerFn({ method: "POST" })
     }
     ease_factor =
       Math.round(
-        (Math.max(1.3, Number(ease_factor) + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02))) +
+        (Math.max(
+          1.3,
+          Number(ease_factor) + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02)),
+        ) +
           Number.EPSILON) *
           100,
       ) / 100;
@@ -266,180 +267,24 @@ export const generateFlashcards = createServerFn({ method: "POST" })
       })
       .parse(input),
   )
-  .handler(async ({ context, data }) => {
-    const { supabase, userId } = context;
-    const { data: deck } = await supabase
-      .from("flashcard_decks")
-      .select("id, language_code")
-      .eq("id", data.deck_id)
-      .eq("user_id", userId)
-      .maybeSingle();
-    if (!deck) throw new Error("Deck not found");
-
-    const { data: language } = await supabase
-      .from("languages")
-      .select("name")
-      .eq("code", deck.language_code)
-      .maybeSingle();
-    const languageName = language?.name ?? deck.language_code;
-    const nativeName = await getNativeName(supabase, userId);
-
-    const key = process.env.LOVABLE_API_KEY;
-    if (!key) throw new Error("Missing LOVABLE_API_KEY");
-
-    const { createLovableAiGatewayProvider } = await import("@/lib/ai-gateway.server");
-    const { generateText, Output } = await import("ai");
-    const { z: zod } = await import("zod");
-
-    const gateway = createLovableAiGatewayProvider(key);
-    const model = gateway("google/gemini-3-flash-preview");
-
-    const { output } = await generateText({
-      model,
-      output: Output.object({
-        schema: zod.object({
-          cards: zod
-            .array(
-              zod.object({
-                front: zod.string(),
-                back: zod.string(),
-                example: zod.string(),
-                emoji: zod.string(),
-              }),
-            )
-            .max(15),
-        }),
-      }),
-      prompt: `Generate ${data.count} vocabulary flashcards for a ${nativeName}-speaking learner of ${languageName} at CEFR level ${data.level}, on the topic "${data.topic}".
-Each card: "front" is a word or short phrase in ${languageName}, "back" is the translation into ${nativeName} (the learner's native language, NOT English unless ${nativeName} is English), "example" is a short natural example sentence in ${languageName}, "emoji" is a single emoji that visually represents the word to aid memory (use a neutral one like ✨ only if nothing fits).
-Keep them appropriate for level ${data.level}. Return only the cards.`,
-    });
-
-    const cards = (output?.cards ?? []).slice(0, data.count).filter((c) => c.front && c.back);
-    if (cards.length === 0) throw new Error("No cards generated");
-
-    const { error: insErr } = await supabase.from("flashcards").insert(
-      cards.map((c) => ({
-        deck_id: data.deck_id,
-        user_id: userId,
-        front: c.front,
-        back: c.back,
-        example: c.example || null,
-        emoji: c.emoji || null,
-      })),
+  .handler(async () => {
+    throw new Error(
+      "AI flashcard generation is quarantined until an accepted OdynAI application contract is available",
     );
-    if (insErr) throw new Error(insErr.message);
-
-
-    return { inserted: cards.length };
   });
 
-// Creates a ready-made starter deck for a language + CEFR level and fills it
-// with AI-generated vocabulary translated into the learner's native language.
 export const createStarterDeck = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
-    z
-      .object({
-        language_code: z.string().min(2),
-        level: CefrLevel,
-      })
-      .parse(input),
+    z.object({ language_code: z.string().min(2), level: CefrLevel }).parse(input),
   )
-  .handler(async ({ context, data }) => {
-    const { supabase, userId } = context;
-
-    const { data: language } = await supabase
-      .from("languages")
-      .select("name")
-      .eq("code", data.language_code)
-      .maybeSingle();
-    const languageName = language?.name ?? data.language_code;
-    const nativeName = await getNativeName(supabase, userId);
-
-    // Reuse an existing starter deck for this language + level if present.
-    const deckName = `${languageName} · ${data.level} Starter`;
-    const { data: existing } = await supabase
-      .from("flashcard_decks")
-      .select("id")
-      .eq("user_id", userId)
-      .eq("name", deckName)
-      .maybeSingle();
-
-    let deckId = existing?.id as string | undefined;
-    if (!deckId) {
-      const { data: row, error } = await supabase
-        .from("flashcard_decks")
-        .insert({
-          user_id: userId,
-          name: deckName,
-          language_code: data.language_code,
-          description: `Ready-made ${data.level} vocabulary for ${languageName}.`,
-        })
-        .select("id")
-        .single();
-      if (error) throw new Error(error.message);
-      deckId = row.id;
-    }
-
-    const key = process.env.LOVABLE_API_KEY;
-    if (!key) throw new Error("Missing LOVABLE_API_KEY");
-
-    const { createLovableAiGatewayProvider } = await import("@/lib/ai-gateway.server");
-    const { generateText, Output } = await import("ai");
-    const { z: zod } = await import("zod");
-
-    const gateway = createLovableAiGatewayProvider(key);
-    const model = gateway("google/gemini-3-flash-preview");
-    const topics = STARTER_TOPICS[data.level] ?? STARTER_TOPICS.A1;
-
-    const { output } = await generateText({
-      model,
-      output: Output.object({
-        schema: zod.object({
-          cards: zod
-            .array(
-              zod.object({
-                front: zod.string(),
-                back: zod.string(),
-                example: zod.string(),
-                emoji: zod.string(),
-              }),
-            )
-            .max(15),
-        }),
-      }),
-      prompt: `Generate 14 high-frequency vocabulary flashcards for a ${nativeName}-speaking learner of ${languageName} at CEFR level ${data.level}.
-Cover a good spread of ${topics}.
-Each card: "front" is a word or short phrase in ${languageName}, "back" is the translation into ${nativeName} (the learner's native language, NOT English unless ${nativeName} is English), "example" is a short natural example sentence in ${languageName}, "emoji" is a single emoji that visually represents the word to aid memory (use ✨ only if nothing fits).
-Keep them appropriate for level ${data.level} and avoid duplicates. Return only the cards.`,
-    });
-
-    const cards = (output?.cards ?? []).filter((c) => c.front && c.back);
-    if (cards.length === 0) throw new Error("No cards generated");
-
-    const { error: insErr } = await supabase.from("flashcards").insert(
-      cards.map((c) => ({
-        deck_id: deckId,
-        user_id: userId,
-        front: c.front,
-        back: c.back,
-        example: c.example || null,
-        emoji: c.emoji || null,
-      })),
+  .handler(async () => {
+    throw new Error(
+      "AI starter-deck generation is quarantined until an accepted OdynAI application contract is available",
     );
-    if (insErr) throw new Error(insErr.message);
-
-
-    return { deck_id: deckId, inserted: cards.length };
   });
 
-
-async function bumpXp(
-  supabase: { from: (t: string) => any },
-  userId: string,
-  amount: number,
-) {
+async function bumpXp(supabase: SupabaseClient<Database>, userId: string, amount: number) {
   const { data: stats } = await supabase
     .from("user_stats")
     .select("total_xp")
@@ -448,6 +293,9 @@ async function bumpXp(
   const current = stats?.total_xp ?? 0;
   await supabase
     .from("user_stats")
-    .update({ total_xp: current + amount, last_activity_date: new Date().toISOString().slice(0, 10) })
+    .update({
+      total_xp: current + amount,
+      last_activity_date: new Date().toISOString().slice(0, 10),
+    })
     .eq("user_id", userId);
 }

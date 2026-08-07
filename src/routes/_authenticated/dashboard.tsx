@@ -196,7 +196,9 @@ function DashboardPage() {
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl gradient-brand text-primary-foreground">
               <Sparkles className="h-5 w-5" />
             </div>
-            <span className="truncate text-base font-bold tracking-tight sm:text-lg">ShinGiTai Language</span>
+            <span className="truncate text-base font-bold tracking-tight sm:text-lg">
+              ShinGiTai Language
+            </span>
           </Link>
 
           <div className="flex shrink-0 items-center gap-1 sm:gap-2">
@@ -221,7 +223,9 @@ function DashboardPage() {
         <div className="relative overflow-hidden rounded-3xl border border-border bg-card shadow-soft">
           <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
             <div className="flex flex-col gap-2 p-5 sm:p-6">
-              <p className="text-xs font-semibold uppercase tracking-wide text-primary">Today’s mission</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-primary">
+                Today’s mission
+              </p>
               <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
                 {profileLoading ? <Skeleton className="h-9 w-64" /> : `Welcome back, ${name}!`}
               </h1>
@@ -243,10 +247,7 @@ function DashboardPage() {
         {/* Stats */}
         <div className="mt-5 grid grid-cols-2 gap-3 sm:mt-6 sm:grid-cols-4">
           {STAT_CARDS.map((s) => (
-            <div
-              key={s.label}
-              className="rounded-2xl border border-border bg-card p-4 shadow-soft"
-            >
+            <div key={s.label} className="rounded-2xl border border-border bg-card p-4 shadow-soft">
               <s.icon className={`h-5 w-5 ${s.tone}`} />
               <p className="mt-3 text-2xl font-bold tabular-nums">{s.value}</p>
               <p className="text-xs text-muted-foreground">{s.label}</p>
@@ -307,7 +308,8 @@ function DashboardPage() {
               <p className="mt-4 font-semibold">{a.title}</p>
               <p className="text-sm text-muted-foreground">{a.desc}</p>
               <span className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-primary">
-                Continue <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                Continue{" "}
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </span>
             </Link>
           ))}
@@ -317,7 +319,9 @@ function DashboardPage() {
           <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
             Support tools
           </h3>
-          <p className="text-sm text-muted-foreground">Use these when you need extra practice or review.</p>
+          <p className="text-sm text-muted-foreground">
+            Use these when you need extra practice or review.
+          </p>
         </div>
         <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
           {SUPPORT_ACTIONS.map((a) => (
@@ -348,10 +352,7 @@ function DashboardPage() {
             </>
           ) : courses && courses.length > 0 ? (
             courses.map((c) => (
-              <div
-                key={c.id}
-                className="rounded-2xl border border-border bg-card p-5 shadow-soft"
-              >
+              <div key={c.id} className="rounded-2xl border border-border bg-card p-5 shadow-soft">
                 <div className="flex items-center gap-3">
                   <span className="text-3xl">{c.languages?.flag_emoji ?? "🌐"}</span>
                   <div>
@@ -364,10 +365,16 @@ function DashboardPage() {
               </div>
             ))
           ) : (
-            <AddLanguageCard userId={user!.id} onAdded={() => queryClient.invalidateQueries({ queryKey: ["courses", user?.id] })} />
+            <AddLanguageCard
+              userId={user!.id}
+              onAdded={() => queryClient.invalidateQueries({ queryKey: ["courses", user?.id] })}
+            />
           )}
           {courses && courses.length > 0 && (
-            <AddLanguageCard userId={user!.id} onAdded={() => queryClient.invalidateQueries({ queryKey: ["courses", user?.id] })} />
+            <AddLanguageCard
+              userId={user!.id}
+              onAdded={() => queryClient.invalidateQueries({ queryKey: ["courses", user?.id] })}
+            />
           )}
         </div>
       </main>
@@ -394,7 +401,9 @@ function AddLanguageCard({ userId, onAdded }: { userId: string; onAdded: () => v
       .from("user_courses")
       .insert({ user_id: userId, language_code: code });
     if (error) {
-      toast.error(error.message.includes("duplicate") ? "Already learning that language." : error.message);
+      toast.error(
+        error.message.includes("duplicate") ? "Already learning that language." : error.message,
+      );
       return;
     }
     toast.success("Language added! Let's learn.");
