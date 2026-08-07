@@ -61,7 +61,9 @@ export function selectReadyCommands<TPayload>(
 export function transitionCommand<TPayload>(
   command: PendingCommand<TPayload>,
   status: PendingCommandStatus,
-  patch: Partial<Pick<PendingCommand<TPayload>, "nextAttemptAt" | "lastErrorCode" | "expectedServerRevision">> = {},
+  patch: Partial<
+    Pick<PendingCommand<TPayload>, "nextAttemptAt" | "lastErrorCode" | "expectedServerRevision">
+  > = {},
 ): PendingCommand<TPayload> {
   if (TERMINAL_STATUSES.has(command.status) && command.status !== status) {
     throw new Error(`Cannot transition terminal command ${command.commandId}`);

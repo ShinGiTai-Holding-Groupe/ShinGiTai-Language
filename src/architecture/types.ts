@@ -41,38 +41,10 @@ export interface BoundaryViolation {
   readonly message: string;
 }
 
-export interface PortRequestContext {
-  readonly requestId: string;
-  readonly userId?: string;
-  readonly organizationId?: string;
-  readonly locale?: string;
-  readonly signal?: AbortSignal;
-}
-
-export interface PortResult<T> {
-  readonly ok: boolean;
-  readonly value?: T;
-  readonly error?: {
-    readonly code: string;
-    readonly message: string;
-    readonly retryable: boolean;
-  };
-}
-
-export interface RuntimePort<TRequest, TResponse> {
-  execute(request: TRequest, context: PortRequestContext): Promise<PortResult<TResponse>>;
-}
-
 export interface ClockPort {
   now(): Date;
 }
 
 export interface IdGeneratorPort {
   generate(): string;
-}
-
-export interface KeyValuePort<T> {
-  get(key: string): Promise<T | undefined>;
-  set(key: string, value: T): Promise<void>;
-  delete(key: string): Promise<void>;
 }

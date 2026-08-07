@@ -1,44 +1,33 @@
 import { access, readFile, readdir } from "node:fs/promises";
 import { constants as fsConstants } from "node:fs";
 import { dirname, extname, relative, resolve, sep } from "node:path";
-import process from "node:process";
 
 const root = process.cwd();
 const sourceRoot = resolve(root, "src");
-const sourceExtensions = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"]);
-const importPattern = /(?:import|export)\s+(?:type\s+)?(?:[^"']*?\s+from\s+)?["']([^"']+)["']|import\s*\(\s*["']([^"']+)["']\s*\)/g;
-const forbiddenProviderPattern = /openai-compatible|@ai-sdk\/openai|@ai-sdk\/anthropic|@google\/generative-ai|ollama|huggingface|shinrei\/providers|ai\.gateway\.lovable\.dev|lovable-api-key/i;
-const forbiddenUrlPattern = /https?:\/\/(?:ai\.gateway\.lovable\.dev|api\.openai\.com|api\.anthropic\.com)/i;
-
-async function collectFiles(directory) {
-  const entries = await readdir(directory, { withFileTypes: true });
-  const files = [];
-  for (const entry of entries) {
+const extensions = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"]);
+const importPattern =
+  /(?:import|export)\s+(?:type\s+)?(?:[^"']*?\s+from\s+)?["']([^"']+)["']|import\s*\(\s*["']([^"']+)["']\s*\)/g;
+const providerDependency =
+  /openai-compatible|@ai-sdk\/openai|@ai-sdk\/anthropic|@google\/generative-ai|ollama|huggingface|openai\/|anthropic\/|shinrei/i;
+const forbiddenLiteral =
+  /ai\.gateway|\/v1\/gateways\/|lovable|LOVABLE_API_KEY|api\.openai\.com|api\.anthropic\.com/i;
+const forbiddenComposition =
+  /hikari-core\/composition|odynai-hikari\/composition|hikari-composition\/src\/composition|runtimeport|direct\s+shinrei/i;
+const physicalField = /readonly\s+(?:provider|physicalModel|model|node|gpu|physicalEndpoint)\s*:/i;
+const duplicateIdentity = /HIKARI_IDENTITY|identityId\s*:\s*["']hikari["']/;
+const normalize = (value) => value.split(sep).join("/");
+async function collect(directory) {
+  const result = [];
+  for (const entry of await readdir(directory, { withFileTypes: true })) {
     const path = resolve(directory, entry.name);
-    if (entry.isDirectory()) files.push(...(await collectFiles(path)));
-    else if (sourceExtensions.has(extname(entry.name))) files.push(path);
+    if (entry.isDirectory()) result.push(...(await collect(path)));
+    else if (extensions.has(extname(entry.name))) result.push(path);
   }
-  return files;
+  return result;
 }
-
-function normalize(path) {
-  return path.split(sep).join("/");
-}
-
-function domainName(relativePath) {
-  const match = normalize(relativePath).match(/^domains\/([^/]+)\//);
-  return match?.[1] ?? null;
-}
-
-function resolveRelativeImport(sourceFile, importedPath) {
-  return normalize(relative(sourceRoot, resolve(dirname(sourceFile), importedPath)));
-}
-
-function isPublicDomainEntrypoint(targetPath) {
-  return /^domains\/[^/]+\/index(?:\.[^.]+)?$/.test(targetPath);
-}
-
-async function pathExists(path) {
+const domainName = (value) => normalize(value).match(/^domains\/([^/]+)(?:\/|$)/)?.[1] ?? null;
+const publicDomain = (value) => /^domains\/[^/]+(?:\/index(?:\.[^.]+)?)?$/.test(value);
+async function exists(path) {
   try {
     await access(path, fsConstants.F_OK);
     return true;
@@ -47,110 +36,115 @@ async function pathExists(path) {
   }
 }
 
-function candidateEntrypoints(entrypoint) {
-  return [
-    resolve(root, `${entrypoint}.ts`),
-    resolve(root, `${entrypoint}.tsx`),
-    resolve(root, entrypoint, "index.ts"),
-    resolve(root, entrypoint, "index.tsx"),
-  ];
-}
-
 const violations = [];
-const files = await collectFiles(sourceRoot);
-
+const files = await collect(sourceRoot);
 for (const file of files) {
-  const sourceRelative = normalize(relative(sourceRoot, file));
-  const sourceDomain = domainName(sourceRelative);
+  const relativeFile = normalize(relative(sourceRoot, file));
   const content = await readFile(file, "utf8");
-
-  if (forbiddenUrlPattern.test(content) || /Lovable-API-Key/i.test(content)) {
+  const sourceDomain = domainName(relativeFile);
+  for (const [pattern, code, message] of [
+    [
+      forbiddenLiteral,
+      "legacy_ai_literal",
+      "Legacy gateways and generator-specific AI are forbidden.",
+    ],
+    [forbiddenComposition, "execution_bypass", "Runtime/composition/Shinrei access is forbidden."],
+    [
+      duplicateIdentity,
+      "duplicate_hikari_identity",
+      "Language must not define global Hikari identity.",
+    ],
+  ])
+    if (pattern.test(content)) violations.push({ code, file: relativeFile, message });
+  if (/^domains\//.test(relativeFile) && physicalField.test(content))
     violations.push({
-      code: "physical_provider_literal",
-      file: sourceRelative,
-      importedPath: "literal",
-      message: "Physical provider URLs and credentials are forbidden in Language product code.",
+      code: "physical_field",
+      file: relativeFile,
+      message: "Educational domain state cannot contain execution-plane fields.",
     });
-  }
-
   for (const match of content.matchAll(importPattern)) {
-    const importedPath = match[1] ?? match[2];
-    if (!importedPath) continue;
-
-    if (forbiddenProviderPattern.test(importedPath)) {
-      violations.push({
-        code: "physical_provider_import",
-        file: sourceRelative,
-        importedPath,
-        message: "Language may access AI only through OdynAiApplicationPort.",
-      });
-    }
-
-    if (!sourceDomain || !importedPath.startsWith(".")) continue;
-    const targetRelative = resolveRelativeImport(file, importedPath);
-    const targetDomain = domainName(targetRelative);
-    if (!targetDomain || targetDomain === sourceDomain) continue;
-    if (!isPublicDomainEntrypoint(targetRelative)) {
+    const imported = match[1] ?? match[2];
+    if (!imported) continue;
+    if (providerDependency.test(imported))
+      violations.push({ code: "provider_dependency", file: relativeFile, message: imported });
+    if (!sourceDomain || !imported.startsWith(".")) continue;
+    const target = normalize(relative(sourceRoot, resolve(dirname(file), imported)));
+    const targetDomain = domainName(target);
+    if (targetDomain && targetDomain !== sourceDomain && !publicDomain(target))
       violations.push({
         code: "private_cross_domain_import",
-        file: sourceRelative,
-        importedPath,
-        message: `Cross-domain imports must use src/domains/${targetDomain}/index.ts.`,
+        file: relativeFile,
+        message: imported,
       });
-    }
   }
 }
-
 const packageJson = JSON.parse(await readFile(resolve(root, "package.json"), "utf8"));
-for (const [sectionName, dependencies] of Object.entries({
-  dependencies: packageJson.dependencies ?? {},
-  devDependencies: packageJson.devDependencies ?? {},
-})) {
-  for (const dependencyName of Object.keys(dependencies)) {
-    if (forbiddenProviderPattern.test(dependencyName)) {
-      violations.push({
-        code: "physical_provider_dependency",
-        file: "package.json",
-        importedPath: dependencyName,
-        message: `Forbidden physical provider dependency found in ${sectionName}.`,
-      });
-    }
-  }
-}
-
-const moduleCatalog = await readFile(resolve(root, "src/architecture/module-catalog.ts"), "utf8");
-const entrypointPattern = /publicEntrypoint:\s*["']([^"']+)["']/g;
-for (const match of moduleCatalog.matchAll(entrypointPattern)) {
-  const entrypoint = match[1];
-  const candidates = candidateEntrypoints(entrypoint);
-  const existence = await Promise.all(candidates.map(pathExists));
-  if (!existence.some(Boolean)) {
+for (const dependency of Object.keys({
+  ...(packageJson.dependencies ?? {}),
+  ...(packageJson.devDependencies ?? {}),
+}))
+  if (providerDependency.test(dependency))
+    violations.push({ code: "provider_sdk", file: "package.json", message: dependency });
+for (const file of [".env.example", "package.json"]) {
+  const content = await readFile(resolve(root, file), "utf8");
+  if (forbiddenLiteral.test(content))
     violations.push({
-      code: "missing_module_entrypoint",
-      file: "src/architecture/module-catalog.ts",
-      importedPath: entrypoint,
-      message: "Every declared module entrypoint must exist in the repository.",
+      code: "legacy_configuration",
+      file,
+      message: "Legacy AI configuration is forbidden.",
     });
-  }
 }
-
-function assertSeededViolationDetection() {
-  const seededImports = ["@ai-sdk/openai-compatible", "https://ai.gateway.lovable.dev/v1", "shinrei/providers/openai"];
-  for (const seeded of seededImports) {
-    if (!forbiddenProviderPattern.test(seeded) && !forbiddenUrlPattern.test(seeded)) {
-      throw new Error(`Architecture validator self-test failed for seeded violation: ${seeded}`);
-    }
-  }
+const catalog = await readFile(resolve(root, "src/architecture/module-catalog.ts"), "utf8");
+for (const match of catalog.matchAll(/publicEntrypoint:\s*["']([^"']+)["']/g)) {
+  const entry = match[1];
+  const candidates = [resolve(root, `${entry}.ts`), resolve(root, entry, "index.ts")];
+  if (!(await Promise.all(candidates.map(exists))).some(Boolean))
+    violations.push({
+      code: "missing_entrypoint",
+      file: "src/architecture/module-catalog.ts",
+      message: entry,
+    });
 }
-assertSeededViolationDetection();
-
-if (violations.length > 0) {
-  console.error("Architecture validation failed:\n");
-  for (const violation of violations) {
-    console.error(`- [${violation.code}] ${violation.file} -> ${violation.importedPath}`);
-    console.error(`  ${violation.message}`);
-  }
-  process.exitCode = 1;
-} else {
-  console.log(`Architecture validation passed (${files.length} source files scanned, package and module catalog verified).`);
+const statefulContracts = [
+  "src/domains/learning-evidence/types.ts",
+  "src/domains/assessment/types.ts",
+  "src/domains/promotion/types.ts",
+  "src/domains/pedagogical-memory/types.ts",
+  "src/domains/sync/types.ts",
+  "src/domains/accessibility/types.ts",
+];
+for (const name of statefulContracts) {
+  const content = await readFile(resolve(root, name), "utf8");
+  if (!/(?:extends\s+TenantContext|tenantPartition\s*:)/.test(content.replace(/readonly\s+/g, "")))
+    violations.push({
+      code: "tenantless_stateful_contract",
+      file: name,
+      message: "Stateful public contracts must carry canonical tenant context.",
+    });
 }
+for (const seeded of [
+  "@ai-sdk/openai-compatible",
+  "https://ai.gateway.example/v1",
+  "@shingitai/hikari-core/composition",
+  "RuntimePort",
+  "readonly provider: string",
+  "HIKARI_IDENTITY",
+])
+  if (
+    ![
+      providerDependency,
+      forbiddenLiteral,
+      forbiddenComposition,
+      physicalField,
+      duplicateIdentity,
+    ].some((pattern) => pattern.test(seeded))
+  )
+    throw new Error(`Validator self-test failed: ${seeded}`);
+if (violations.length) {
+  console.error(`Architecture validation failed (${violations.length}):`);
+  for (const item of violations) console.error(`- [${item.code}] ${item.file}: ${item.message}`);
+  process.exit(1);
+}
+console.log(
+  `Architecture validation passed (${files.length} source files, dependencies, tenant contracts, and seeded violations checked).`,
+);

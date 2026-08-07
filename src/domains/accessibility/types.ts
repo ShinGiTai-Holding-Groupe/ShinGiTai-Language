@@ -24,6 +24,7 @@ export type CaptionPreference = "system" | "on" | "off";
 export type InputPreference = "pointer" | "keyboard" | "voice" | "switch" | "mixed";
 
 export type AccessibilityProfile = {
+  tenantPartition: string;
   userId: string;
   textScale: number;
   lineHeightScale: number;
@@ -62,3 +63,19 @@ export type InclusiveInteractionRequirement = {
   colorIndependentMeaning: boolean;
   timeoutExtensionSupported: boolean;
 };
+
+export type AssessmentChannelStatus =
+  | "ASSESSED"
+  | "ACCOMMODATED"
+  | "NOT_ASSESSED"
+  | "NOT_APPLICABLE"
+  | "INSUFFICIENT_EVIDENCE";
+export type AccommodationMeasurement = "MEASURED" | "ACCOMMODATED_NOT_MEASURED";
+export interface AssessmentChannelResult {
+  readonly tenantPartition: string;
+  readonly userId: string;
+  readonly channel: "reading" | "writing" | "listening" | "speaking";
+  readonly status: AssessmentChannelStatus;
+  readonly measurement: AccommodationMeasurement;
+  readonly masteryEligible: boolean;
+}

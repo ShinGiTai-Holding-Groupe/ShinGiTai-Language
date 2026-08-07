@@ -61,8 +61,10 @@ export function validateSyncBatch(batch: SyncBatch, device: DeviceRecord): void 
     ) {
       throw new Error(`Command ${command.commandId} crosses tenant, user or device boundary`);
     }
-    if (!command.semanticPayloadHash.trim()) throw new Error(`Command ${command.commandId} lacks payload hash`);
-    if (commandIds.has(command.commandId)) throw new Error(`Duplicate command id ${command.commandId}`);
+    if (!command.semanticPayloadHash.trim())
+      throw new Error(`Command ${command.commandId} lacks payload hash`);
+    if (commandIds.has(command.commandId))
+      throw new Error(`Duplicate command id ${command.commandId}`);
 
     const previousHash = idempotency.get(command.idempotencyKey);
     if (previousHash && previousHash !== command.semanticPayloadHash) {

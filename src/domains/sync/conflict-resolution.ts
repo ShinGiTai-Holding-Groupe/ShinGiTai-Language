@@ -23,7 +23,9 @@ function appendValues<TValue>(local: TValue, server: TValue): TValue | undefined
   return result as TValue;
 }
 
-export function resolveConflict<TValue>(context: ConflictContext<TValue>): ConflictResolution<TValue> {
+export function resolveConflict<TValue>(
+  context: ConflictContext<TValue>,
+): ConflictResolution<TValue> {
   const { dataClass, local, server, strategy } = context;
 
   if (local.tenantPartition !== server.tenantPartition) {
@@ -34,7 +36,11 @@ export function resolveConflict<TValue>(context: ConflictContext<TValue>): Confl
     };
   }
 
-  if (dataClass === "canonical_learning" && strategy !== "server_wins" && strategy !== "domain_specific") {
+  if (
+    dataClass === "canonical_learning" &&
+    strategy !== "server_wins" &&
+    strategy !== "domain_specific"
+  ) {
     return {
       status: "rejected",
       source: "manual",
@@ -80,7 +86,11 @@ export function resolveConflict<TValue>(context: ConflictContext<TValue>): Confl
       }
       const appended = appendValues(local.value, server.value);
       return appended === undefined
-        ? { status: "manual_required", source: "manual", reason: "Append-only strategy requires array values" }
+        ? {
+            status: "manual_required",
+            source: "manual",
+            reason: "Append-only strategy requires array values",
+          }
         : {
             status: "resolved",
             value: appended,

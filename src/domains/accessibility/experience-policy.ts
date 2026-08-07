@@ -10,9 +10,7 @@ function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
 }
 
-export function normalizeAccessibilityProfile(
-  profile: AccessibilityProfile,
-): AccessibilityProfile {
+export function normalizeAccessibilityProfile(profile: AccessibilityProfile): AccessibilityProfile {
   return {
     ...profile,
     textScale: clamp(profile.textScale, 0.8, 2),

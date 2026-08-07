@@ -44,23 +44,27 @@ export function validateDependencyEdge(
   const violations: BoundaryViolation[] = [];
 
   if (!source) {
-    return [{
-      code: "unknown_source_module",
-      sourceModuleId: edge.sourceModuleId,
-      targetModuleId: edge.targetModuleId,
-      importedPath: edge.importedPath,
-      message: `Unknown source module: ${edge.sourceModuleId}`,
-    }];
+    return [
+      {
+        code: "unknown_source_module",
+        sourceModuleId: edge.sourceModuleId,
+        targetModuleId: edge.targetModuleId,
+        importedPath: edge.importedPath,
+        message: `Unknown source module: ${edge.sourceModuleId}`,
+      },
+    ];
   }
 
   if (!target) {
-    return [{
-      code: "unknown_target_module",
-      sourceModuleId: edge.sourceModuleId,
-      targetModuleId: edge.targetModuleId,
-      importedPath: edge.importedPath,
-      message: `Unknown target module: ${edge.targetModuleId}`,
-    }];
+    return [
+      {
+        code: "unknown_target_module",
+        sourceModuleId: edge.sourceModuleId,
+        targetModuleId: edge.targetModuleId,
+        importedPath: edge.importedPath,
+        message: `Unknown target module: ${edge.targetModuleId}`,
+      },
+    ];
   }
 
   if (PHYSICAL_PROVIDER_PATTERNS.some((pattern) => pattern.test(edge.importedPath))) {
