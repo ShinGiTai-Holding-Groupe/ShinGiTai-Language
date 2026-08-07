@@ -80,11 +80,7 @@ export async function evaluateAchievements(
       .select("total_xp, current_streak")
       .eq("user_id", userId)
       .maybeSingle(),
-    supabase
-      .from("profiles")
-      .select("onboarding_completed")
-      .eq("id", userId)
-      .maybeSingle(),
+    supabase.from("profiles").select("onboarding_completed").eq("id", userId).maybeSingle(),
     supabase
       .from("user_lesson_progress")
       .select("id", { count: "exact", head: true })
@@ -94,10 +90,7 @@ export async function evaluateAchievements(
       .from("user_quiz_attempts")
       .select("id", { count: "exact", head: true })
       .eq("user_id", userId),
-    supabase
-      .from("user_quiz_attempts")
-      .select("id, score, total")
-      .eq("user_id", userId),
+    supabase.from("user_quiz_attempts").select("id, score, total").eq("user_id", userId),
     supabase
       .from("tutor_conversations")
       .select("id", { count: "exact", head: true })

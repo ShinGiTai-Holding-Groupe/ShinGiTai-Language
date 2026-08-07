@@ -64,7 +64,10 @@ function getNextStepRecommendation({
   course,
   currentStreak,
   dailyGoalMinutes,
-}: Pick<ContinueLearningCardProps, "course" | "currentStreak" | "dailyGoalMinutes">): NextStepRecommendation {
+}: Pick<
+  ContinueLearningCardProps,
+  "course" | "currentStreak" | "dailyGoalMinutes"
+>): NextStepRecommendation {
   const safeCourseXp = safeNonNegativeNumber(course?.xp);
   const safeCurrentStreak = safeNonNegativeNumber(currentStreak);
   const safeDailyGoalMinutes = safePositiveNumber(dailyGoalMinutes, DEFAULT_DAILY_GOAL_MINUTES);
@@ -72,7 +75,8 @@ function getNextStepRecommendation({
   if (!course) {
     return {
       label: "Create your path",
-      description: "Pick one language first. After that, your dashboard can guide lessons, review, and practice in order.",
+      description:
+        "Pick one language first. After that, your dashboard can guide lessons, review, and practice in order.",
       reason: "No active course yet",
       priority: "recommended",
       cta: "Choose language",
@@ -83,7 +87,8 @@ function getNextStepRecommendation({
   if (safeCourseXp < MIN_BASE_XP_FOR_REVIEW) {
     return {
       label: "Build the base",
-      description: "Start with AI Teacher to establish the first useful words and patterns for this course.",
+      description:
+        "Start with AI Teacher to establish the first useful words and patterns for this course.",
       reason: "Early course progress",
       priority: "recommended",
       cta: "Start lesson",
@@ -94,7 +99,8 @@ function getNextStepRecommendation({
   if (safeCurrentStreak === 0) {
     return {
       label: "Restart momentum",
-      description: "Use a short flashcard review to make the next session easy to finish and easy to repeat tomorrow.",
+      description:
+        "Use a short flashcard review to make the next session easy to finish and easy to repeat tomorrow.",
       reason: "No active streak yet",
       priority: "quick-win",
       cta: "Review flashcards",
@@ -105,7 +111,8 @@ function getNextStepRecommendation({
   if (safeDailyGoalMinutes <= 10) {
     return {
       label: "Win the short session",
-      description: "Keep today lightweight with flashcards before moving into a longer lesson or conversation.",
+      description:
+        "Keep today lightweight with flashcards before moving into a longer lesson or conversation.",
       reason: `${safeDailyGoalMinutes}-minute daily goal`,
       priority: "quick-win",
       cta: "Review flashcards",
@@ -115,7 +122,8 @@ function getNextStepRecommendation({
 
   return {
     label: "Use it in speech",
-    description: "You have enough base work for today. Move into tutor conversation and make the language usable.",
+    description:
+      "You have enough base work for today. Move into tutor conversation and make the language usable.",
     reason: "Ready for active practice",
     priority: "ready",
     cta: "Practice speaking",
@@ -125,7 +133,10 @@ function getNextStepRecommendation({
 
 function RecommendationLoadingState() {
   return (
-    <div className="rounded-2xl border border-border bg-background/70 p-4 shadow-sm" aria-busy="true">
+    <div
+      className="rounded-2xl border border-border bg-background/70 p-4 shadow-sm"
+      aria-busy="true"
+    >
       <div className="flex flex-wrap items-center gap-2">
         <Skeleton className="h-4 w-36" />
         <Skeleton className="h-7 w-24 rounded-full" />
@@ -163,7 +174,9 @@ export function ContinueLearningCard({
     <section className="mt-6 rounded-3xl border border-border bg-card p-6 shadow-soft">
       <div className="grid gap-5 md:grid-cols-[1.35fr_0.65fr] md:items-center">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-wide text-primary">Continue learning</p>
+          <p className="text-sm font-semibold uppercase tracking-wide text-primary">
+            Continue learning
+          </p>
           <h2 className="mt-2 text-2xl font-bold tracking-tight">
             {isLoading ? <Skeleton className="h-8 w-72" /> : title}
           </h2>
@@ -183,8 +196,12 @@ export function ContinueLearningCard({
         ) : (
           <div className="rounded-2xl border border-border bg-background/70 p-4 shadow-sm">
             <div className="flex flex-wrap items-center gap-2">
-              <p className="text-xs font-semibold uppercase tracking-wide text-primary">Recommended next step</p>
-              <span className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${priorityBadge.className}`}>
+              <p className="text-xs font-semibold uppercase tracking-wide text-primary">
+                Recommended next step
+              </p>
+              <span
+                className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${priorityBadge.className}`}
+              >
                 {priorityBadge.label}
               </span>
             </div>
@@ -192,11 +209,18 @@ export function ContinueLearningCard({
             <p className="mt-2 text-sm text-muted-foreground">{recommendation.description}</p>
 
             <div className="mt-4 rounded-xl border border-border bg-card/80 p-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Why this?</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Why this?
+              </p>
               <p className="mt-1 text-sm font-medium">{recommendation.reason}</p>
             </div>
 
-            <Button asChild variant="hero" size="lg" className="mt-4 w-full shadow-soft transition-transform hover:-translate-y-0.5">
+            <Button
+              asChild
+              variant="hero"
+              size="lg"
+              className="mt-4 w-full shadow-soft transition-transform hover:-translate-y-0.5"
+            >
               <Link to={recommendation.to}>
                 {recommendation.cta}
                 <ArrowRight className="h-4 w-4" />

@@ -1,28 +1,12 @@
 import { useState } from "react";
-import {
-  createFileRoute,
-  Outlet,
-  Link,
-  useNavigate,
-  useParams,
-} from "@tanstack/react-router";
+import { createFileRoute, Outlet, Link, useNavigate, useParams } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import {
-  Plus,
-  MessageCircle,
-  Trash2,
-  ArrowLeft,
-  Loader2,
-} from "lucide-react";
+import { Plus, MessageCircle, Trash2, ArrowLeft, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
-import {
-  listConversations,
-  createConversation,
-  deleteConversation,
-} from "@/lib/tutor.functions";
+import { listConversations, createConversation, deleteConversation } from "@/lib/tutor.functions";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {

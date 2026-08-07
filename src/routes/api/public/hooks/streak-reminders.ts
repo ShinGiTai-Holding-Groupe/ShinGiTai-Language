@@ -54,9 +54,7 @@ export const Route = createFileRoute("/api/public/hooks/streak-reminders")({
             .select("user_id")
             .eq("type", "streak")
             .gte("created_at", since);
-          const sent = new Set(
-            ((already ?? []) as { user_id: string }[]).map((r) => r.user_id),
-          );
+          const sent = new Set(((already ?? []) as { user_id: string }[]).map((r) => r.user_id));
 
           const rows = targets
             .filter((t) => !sent.has(t.user_id))

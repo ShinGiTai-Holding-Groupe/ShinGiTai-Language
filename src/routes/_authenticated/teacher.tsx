@@ -1,22 +1,12 @@
 import { useState } from "react";
-import {
-  createFileRoute,
-  Outlet,
-  Link,
-  useNavigate,
-  useParams,
-} from "@tanstack/react-router";
+import { createFileRoute, Outlet, Link, useNavigate, useParams } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Plus, GraduationCap, Trash2, ArrowLeft, Loader2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
-import {
-  listConversations,
-  createConversation,
-  deleteConversation,
-} from "@/lib/tutor.functions";
+import { listConversations, createConversation, deleteConversation } from "@/lib/tutor.functions";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -209,7 +199,8 @@ function TeacherLayout() {
           <DialogHeader>
             <DialogTitle>New lesson</DialogTitle>
             <DialogDescription>
-              Choose the language and level. The teacher will turn that into a structured lesson with explanation, practice, and corrections.
+              Choose the language and level. The teacher will turn that into a structured lesson
+              with explanation, practice, and corrections.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
@@ -218,15 +209,22 @@ function TeacherLayout() {
                 <Sparkles className="h-4 w-4" /> Start simple, then level up
               </div>
               <p className="mt-2 text-muted-foreground">
-                Not sure where to begin? Pick A1 for a fresh start, or choose the level where you can answer short questions without guessing every word.
+                Not sure where to begin? Pick A1 for a fresh start, or choose the level where you
+                can answer short questions without guessing every word.
               </p>
             </div>
 
             <div className="space-y-1.5">
               <label className="text-sm font-medium">Language</label>
-              <Select value={lang} onValueChange={setLang} disabled={languagesLoading || !hasLanguages}>
+              <Select
+                value={lang}
+                onValueChange={setLang}
+                disabled={languagesLoading || !hasLanguages}
+              >
                 <SelectTrigger>
-                  <SelectValue placeholder={languagesLoading ? "Loading languages..." : "Select a language"} />
+                  <SelectValue
+                    placeholder={languagesLoading ? "Loading languages..." : "Select a language"}
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   {(languages ?? []).map((l) => (
@@ -254,14 +252,20 @@ function TeacherLayout() {
                   ))}
                 </SelectContent>
               </Select>
-              <p className="text-xs text-muted-foreground">{LEVEL_HINTS[level] ?? LEVEL_HINTS.A1}</p>
+              <p className="text-xs text-muted-foreground">
+                {LEVEL_HINTS[level] ?? LEVEL_HINTS.A1}
+              </p>
             </div>
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setDialogOpen(false)}>
               Cancel
             </Button>
-            <Button variant="hero" onClick={handleCreate} disabled={creating || languagesLoading || !hasLanguages}>
+            <Button
+              variant="hero"
+              onClick={handleCreate}
+              disabled={creating || languagesLoading || !hasLanguages}
+            >
               {creating && <Loader2 className="h-4 w-4 animate-spin" />}
               Start lesson
             </Button>

@@ -272,9 +272,11 @@ function LessonsSection() {
   const create = async () => {
     if (!title.trim()) return;
     setCreating(true);
-    const slug = `${lang}-${title.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 50)}-${Date.now()
-      .toString()
-      .slice(-5)}`;
+    const slug = `${lang}-${title
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .slice(0, 50)}-${Date.now().toString().slice(-5)}`;
     const { error } = await supabase.from("grammar_lessons").insert({
       title: title.trim(),
       slug,
@@ -329,10 +331,24 @@ function LessonsSection() {
                   {l.language_code} · {l.level} · {l.is_published ? "published" : "draft"}
                 </p>
               </div>
-              <Button variant="ghost" size="icon-sm" onClick={() => togglePublish(l)} aria-label="Toggle publish">
-                {l.is_published ? <Eye className="h-4 w-4 text-primary" /> : <EyeOff className="h-4 w-4" />}
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                onClick={() => togglePublish(l)}
+                aria-label="Toggle publish"
+              >
+                {l.is_published ? (
+                  <Eye className="h-4 w-4 text-primary" />
+                ) : (
+                  <EyeOff className="h-4 w-4" />
+                )}
               </Button>
-              <Button variant="ghost" size="icon-sm" onClick={() => remove(l.id)} aria-label="Delete">
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                onClick={() => remove(l.id)}
+                aria-label="Delete"
+              >
                 <Trash2 className="h-4 w-4 text-destructive" />
               </Button>
             </div>
@@ -394,8 +410,17 @@ function QuizzesSection() {
                   {q.language_code} · {q.level} · {q.is_published ? "published" : "draft"}
                 </p>
               </div>
-              <Button variant="ghost" size="icon-sm" onClick={() => togglePublish(q)} aria-label="Toggle publish">
-                {q.is_published ? <Eye className="h-4 w-4 text-primary" /> : <EyeOff className="h-4 w-4" />}
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                onClick={() => togglePublish(q)}
+                aria-label="Toggle publish"
+              >
+                {q.is_published ? (
+                  <Eye className="h-4 w-4 text-primary" />
+                ) : (
+                  <EyeOff className="h-4 w-4" />
+                )}
               </Button>
             </div>
           ))

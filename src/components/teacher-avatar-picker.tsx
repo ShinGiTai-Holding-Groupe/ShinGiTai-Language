@@ -29,11 +29,7 @@ export function useTeacherAvatar() {
   return (data?.profile?.teacher_avatar as AvatarVariant | undefined) ?? "nova";
 }
 
-export function TeacherAvatarPicker({
-  trigger,
-}: {
-  trigger?: React.ReactNode;
-}) {
+export function TeacherAvatarPicker({ trigger }: { trigger?: React.ReactNode }) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const updateFn = useServerFn(updateTeacherAvatar);

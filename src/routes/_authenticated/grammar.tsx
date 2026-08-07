@@ -12,8 +12,11 @@ export const Route = createFileRoute("/_authenticated/grammar")({
 });
 
 type Lesson = {
-  id: string; title: string; summary: string | null;
-  level: string; language_code: string;
+  id: string;
+  title: string;
+  summary: string | null;
+  level: string;
+  language_code: string;
 };
 
 function GrammarPage() {
@@ -47,8 +50,9 @@ function GrammarPage() {
           />
         </div>
         <h1 className="mt-6 text-3xl font-bold tracking-tight">Grammar lessons</h1>
-        <p className="text-muted-foreground">Clear explanations with examples, organised by level.</p>
-
+        <p className="text-muted-foreground">
+          Clear explanations with examples, organised by level.
+        </p>
 
         <div className="mt-6 grid gap-3 sm:grid-cols-2">
           {isLoading ? (
@@ -75,7 +79,8 @@ function GrammarPage() {
                 <p className="mt-3 font-semibold">{l.title}</p>
                 {l.summary && <p className="text-sm text-muted-foreground">{l.summary}</p>}
                 <span className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-primary">
-                  Read <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                  Read{" "}
+                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
                 </span>
               </Link>
             ))

@@ -93,14 +93,17 @@ function LeaderboardPage() {
                   </Avatar>
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-semibold">
-                      {name} {isMe && <span className="text-xs font-medium text-primary">(you)</span>}
+                      {name}{" "}
+                      {isMe && <span className="text-xs font-medium text-primary">(you)</span>}
                     </p>
                     <p className="flex items-center gap-1 text-xs text-muted-foreground">
                       <Flame className="h-3.5 w-3.5 text-accent" /> {r.current_streak} day streak
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="font-bold tabular-nums text-gold">{r.total_xp.toLocaleString()}</p>
+                    <p className="font-bold tabular-nums text-gold">
+                      {r.total_xp.toLocaleString()}
+                    </p>
                     <p className="text-xs text-muted-foreground">XP</p>
                   </div>
                 </div>

@@ -46,10 +46,12 @@ function TeacherEmpty() {
       <div className="w-full max-w-3xl rounded-3xl border border-border bg-card p-6 shadow-soft sm:p-8">
         <TeacherAvatar variant={avatar} className="mx-auto mb-6 w-32" />
         <p className="text-sm font-semibold uppercase tracking-wide text-primary">AI Teacher</p>
-        <h2 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">Start a guided language lesson</h2>
+        <h2 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">
+          Start a guided language lesson
+        </h2>
         <p className="mx-auto mt-3 max-w-xl text-sm text-muted-foreground sm:text-base">
-          Pick an existing lesson from the sidebar or create a new one. ShinGiTai Language will guide
-          you through explanation, practice, correction, and voice-based listening support.
+          Pick an existing lesson from the sidebar or create a new one. ShinGiTai Language will
+          guide you through explanation, practice, correction, and voice-based listening support.
         </p>
 
         <div className="mt-6 grid gap-3 text-left sm:grid-cols-3">
@@ -73,7 +75,10 @@ function TeacherEmpty() {
           </p>
           <div className="mt-3 grid gap-2 sm:grid-cols-3">
             {STARTER_PROMPTS.map((prompt) => (
-              <div key={prompt} className="rounded-xl border border-border bg-card px-3 py-2 text-sm font-medium">
+              <div
+                key={prompt}
+                className="rounded-xl border border-border bg-card px-3 py-2 text-sm font-medium"
+              >
                 “{prompt}”
               </div>
             ))}
@@ -89,7 +94,10 @@ function TeacherEmpty() {
           </p>
           <div className="mt-3 grid gap-2 sm:grid-cols-3">
             {COMPLETION_PROMPTS.map((prompt) => (
-              <div key={prompt} className="rounded-xl border border-primary/20 bg-background/80 px-3 py-2 text-sm font-medium text-foreground">
+              <div
+                key={prompt}
+                className="rounded-xl border border-primary/20 bg-background/80 px-3 py-2 text-sm font-medium text-foreground"
+              >
                 “{prompt}”
               </div>
             ))}

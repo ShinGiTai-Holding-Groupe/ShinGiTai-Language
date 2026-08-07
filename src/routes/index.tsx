@@ -102,8 +102,16 @@ const STATS = [
 
 const GAMIFICATION = [
   { icon: Flame, title: "Streaks", desc: "Keep your daily flame alive and never break the chain." },
-  { icon: Trophy, title: "Achievements", desc: "Unlock badges from First Lesson to Conversation Master." },
-  { icon: Zap, title: "XP & Levels", desc: "Earn daily, weekly and monthly XP across 100+ levels." },
+  {
+    icon: Trophy,
+    title: "Achievements",
+    desc: "Unlock badges from First Lesson to Conversation Master.",
+  },
+  {
+    icon: Zap,
+    title: "XP & Levels",
+    desc: "Earn daily, weekly and monthly XP across 100+ levels.",
+  },
   { icon: Star, title: "Leaderboards", desc: "Compete with friends, your country and the world." },
 ];
 
@@ -146,7 +154,10 @@ export const Route = createFileRoute("/")({
         content:
           "Master 28+ languages with AI conversation practice, smart flashcards, grammar lessons and personalized learning paths. Meet your personal AI tutor.",
       },
-      { property: "og:title", content: "ShinGiTai Language — Learn Any Language With Your AI Tutor" },
+      {
+        property: "og:title",
+        content: "ShinGiTai Language — Learn Any Language With Your AI Tutor",
+      },
       {
         property: "og:description",
         content:
@@ -230,12 +241,11 @@ function Hero() {
             Your personal AI language coach
           </span>
           <h1 className="mt-6 text-4xl leading-[1.05] sm:text-5xl lg:text-6xl">
-            Learn any language by{" "}
-            <span className="text-gradient">actually talking</span>.
+            Learn any language by <span className="text-gradient">actually talking</span>.
           </h1>
           <p className="mt-6 max-w-xl text-lg text-muted-foreground">
-            ShinGiTai Language blends conversation practice, smart flashcards, grammar and
-            quizzes into one adaptive path — guided by a tutor you design yourself.
+            ShinGiTai Language blends conversation practice, smart flashcards, grammar and quizzes
+            into one adaptive path — guided by a tutor you design yourself.
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <Button asChild variant="hero" size="xl">
@@ -330,9 +340,7 @@ function SectionHeading({
 }) {
   return (
     <div className="mx-auto max-w-2xl text-center">
-      <span className="text-sm font-semibold uppercase tracking-wider text-primary">
-        {eyebrow}
-      </span>
+      <span className="text-sm font-semibold uppercase tracking-wider text-primary">{eyebrow}</span>
       <h2 className="mt-3 text-3xl sm:text-4xl">{title}</h2>
       {subtitle && <p className="mt-4 text-lg text-muted-foreground">{subtitle}</p>}
     </div>
@@ -406,8 +414,8 @@ function Tutor() {
           </span>
           <h2 className="mt-3 text-3xl sm:text-4xl">Design a coach that gets you</h2>
           <p className="mt-4 text-lg text-muted-foreground">
-            Choose the look, voice, name and personality of your tutor. They explain grammar,
-            run conversations, correct mistakes and build exercises around your goals.
+            Choose the look, voice, name and personality of your tutor. They explain grammar, run
+            conversations, correct mistakes and build exercises around your goals.
           </p>
           <div className="mt-8 grid gap-3 sm:grid-cols-2">
             {personalities.map((p) => (
@@ -448,9 +456,12 @@ function Tutor() {
             </div>
             <div className="mt-5 space-y-4">
               <ChatBubble side="left">こんにちは！How was your day today?</ChatBubble>
-              <ChatBubble side="right">Watashi wa genki desu! I want to practice ordering food.</ChatBubble>
+              <ChatBubble side="right">
+                Watashi wa genki desu! I want to practice ordering food.
+              </ChatBubble>
               <ChatBubble side="left">
-                Great choice! Quick tip: use <strong>を</strong> to mark what you order. Try: コーヒー
+                Great choice! Quick tip: use <strong>を</strong> to mark what you order. Try:
+                コーヒー
                 <strong>を</strong>ください ☕
               </ChatBubble>
             </div>
@@ -521,9 +532,7 @@ function Pricing() {
             key={p.name}
             className={
               "relative rounded-3xl border p-8 shadow-soft " +
-              (p.highlight
-                ? "border-primary/50 bg-card shadow-elegant"
-                : "border-border bg-card")
+              (p.highlight ? "border-primary/50 bg-card shadow-elegant" : "border-border bg-card")
             }
           >
             {p.highlight && (
@@ -595,9 +604,15 @@ function Footer() {
           © {new Date().getFullYear()} ShinGiTai Language. Learn boldly.
         </p>
         <div className="flex gap-6 text-sm text-muted-foreground">
-          <a href="#features" className="hover:text-foreground">Features</a>
-          <a href="#pricing" className="hover:text-foreground">Pricing</a>
-          <a href="#tutor" className="hover:text-foreground">AI Tutor</a>
+          <a href="#features" className="hover:text-foreground">
+            Features
+          </a>
+          <a href="#pricing" className="hover:text-foreground">
+            Pricing
+          </a>
+          <a href="#tutor" className="hover:text-foreground">
+            AI Tutor
+          </a>
         </div>
       </div>
     </footer>
