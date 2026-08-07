@@ -1,4 +1,10 @@
-import { assertSameTenant, assertTenant, freezeDomain, type TenantContext } from "../shared";
+import {
+  assertSameTenant,
+  assertTenant,
+  assertValidDate,
+  freezeDomain,
+  type TenantContext,
+} from "../shared";
 import type {
   MemoryIntegrityVerifier,
   PedagogicalMemoryAuthorization,
@@ -14,6 +20,9 @@ function authorize(
   verifier: MemoryIntegrityVerifier,
 ): void {
   assertSameTenant(tenant, capability);
+  assertValidDate(now, "authorization time");
+  assertValidDate(capability.issuedAt, "capability issuedAt");
+  assertValidDate(capability.expiresAt, "capability expiresAt");
   if (
     capability.subject !== subject ||
     !capability.scopes.includes(scope) ||
@@ -30,6 +39,8 @@ export function recordPedagogicalObservation(
   verifier: MemoryIntegrityVerifier,
 ): PedagogicalObservation {
   assertTenant(input);
+  assertValidDate(input.provenance.recordedAt, "provenance recordedAt");
+  if (input.expiresAt) assertValidDate(input.expiresAt, "observation expiresAt");
   authorize(capability, input, input.subject, input.scope, now, verifier);
   if (!input.provenance.sourceIds.length || !input.value.trim())
     throw new Error("Pedagogical memory requires structured provenance");

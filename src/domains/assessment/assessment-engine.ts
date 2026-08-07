@@ -1,8 +1,15 @@
-import { assertSameTenant, assertTenant, freezeDomain } from "../shared";
+import { assertSameTenant, assertTenant, assertValidDate, freezeDomain } from "../shared";
 import type { AssessmentDecision, IssueAssessmentInput } from "./types";
+
+const issuedDecisions = new WeakSet<AssessmentDecision>();
+
+export function isIssuedAssessmentDecision(decision: AssessmentDecision): boolean {
+  return issuedDecisions.has(decision);
+}
 
 export function issueAssessmentDecision(input: IssueAssessmentInput): AssessmentDecision {
   assertTenant(input);
+  assertValidDate(input.issuedAt, "issuedAt");
   if (
     !input.assessmentDecisionId.trim() ||
     !input.integritySignature.trim() ||
@@ -13,6 +20,16 @@ export function issueAssessmentDecision(input: IssueAssessmentInput): Assessment
     assertSameTenant(input, evidence);
     if (evidence.status !== "VALIDATED")
       throw new Error("Assessment accepts only validated evidence");
+  }
+  for (const requirement of input.definition.requirements) {
+    if (
+      !requirement.requirementId.trim() ||
+      !requirement.skillId.trim() ||
+      !Number.isFinite(requirement.minimumScore) ||
+      requirement.minimumScore < 0 ||
+      requirement.minimumScore > 1
+    )
+      throw new Error("Assessment requirement is invalid");
   }
   const satisfied: string[] = [];
   const unsatisfied: string[] = [];
@@ -42,14 +59,14 @@ export function issueAssessmentDecision(input: IssueAssessmentInput): Assessment
       : unsatisfied
     ).push(requirement.requirementId);
   }
-  const outcome = incomplete
+  const outcome: AssessmentDecision["outcome"] = incomplete
     ? "INCOMPLETE"
     : review
       ? "REVIEW_REQUIRED"
       : unsatisfied.length
         ? "FAIL"
         : "PASS";
-  return freezeDomain({
+  const decision = freezeDomain({
     tenantPartition: input.tenantPartition,
     userId: input.userId,
     ...(input.organizationId ? { organizationId: input.organizationId } : {}),
@@ -66,4 +83,6 @@ export function issueAssessmentDecision(input: IssueAssessmentInput): Assessment
     issuedBy: "assessment_engine" as const,
     integritySignature: input.integritySignature,
   });
+  issuedDecisions.add(decision);
+  return decision;
 }

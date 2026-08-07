@@ -110,6 +110,10 @@ assert(
   Object.isFrozen(validated()) && Object.isFrozen(validated().provenance),
   "Evidence is deeply immutable.",
 );
+rejects(
+  () => baseEvidence({ recordedAt: "not-a-date" }),
+  "Evidence rejects invalid provenance dates.",
+);
 assert(
   transitionLearningEvidence(validated(), "DISPUTED", "reviewer", "2026-08-07T00:03:00Z", tenant)
     .status === "DISPUTED",
@@ -176,6 +180,21 @@ assert(
   Object.isFrozen(pass) && Object.isFrozen(pass.evidenceIds),
   "AssessmentDecision is deeply immutable.",
 );
+rejects(
+  () =>
+    issueAssessmentDecision({
+      ...tenant,
+      assessmentDecisionId: "invalid-threshold",
+      definition: {
+        ...definition,
+        requirements: [{ ...definition.requirements[0]!, minimumScore: 2 }],
+      },
+      evidence: [validated()],
+      issuedAt: "2026-08-07T00:02:00Z",
+      integritySignature: "signed:invalid-threshold",
+    }),
+  "Assessment rejects invalid rubric thresholds.",
+);
 
 const rule = {
   ruleId: "promotion-1",
@@ -213,6 +232,17 @@ assert(
 rejects(
   () => evaluatePromotion({ ...foreign, transitionId: "x", decision: pass, rule, createdAt: "x" }),
   "Promotion rejects tenant mismatch.",
+);
+rejects(
+  () =>
+    evaluatePromotion({
+      ...tenant,
+      transitionId: "forged-transition",
+      decision: { ...pass, assessmentDecisionId: "forged-decision" },
+      rule,
+      createdAt: "2026-08-07T00:03:00Z",
+    }),
+  "Promotion rejects a structurally forged AssessmentDecision.",
 );
 
 const capability: PedagogicalMemoryAuthorization = {
@@ -265,6 +295,16 @@ rejects(
       verifier,
     ),
   "Forged memory capability fails closed.",
+);
+rejects(
+  () =>
+    recordPedagogicalObservation(
+      { ...memoryInput, observationId: "invalid-date" },
+      { ...capability, expiresAt: "not-a-date" },
+      "2026-08-07T00:04:00Z",
+      verifier,
+    ),
+  "Memory rejects invalid authorization dates.",
 );
 rejects(
   () =>
@@ -348,4 +388,4 @@ await rejectsAsync(
   "Vertical rejects tenant switching before state mutation.",
 );
 
-console.log("Foundation canonical domain tests passed (32 behavioral checks).");
+console.log("Foundation canonical domain tests passed (36 behavioral checks).");

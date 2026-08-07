@@ -1,10 +1,15 @@
 import { assertSameTenant, assertTenant, freezeDomain } from "../shared";
+import { isIssuedAssessmentDecision } from "../assessment";
 import type { EvaluatePromotionInput, LearningTransition } from "./types";
 
 export function evaluatePromotion(input: EvaluatePromotionInput): LearningTransition {
   assertTenant(input);
   assertSameTenant(input, input.decision);
-  if (input.decision.issuedBy !== "assessment_engine" || !input.decision.integritySignature)
+  if (
+    !isIssuedAssessmentDecision(input.decision) ||
+    input.decision.issuedBy !== "assessment_engine" ||
+    !input.decision.integritySignature
+  )
     throw new Error("Promotion requires an authoritative AssessmentDecision");
   const passed = input.decision.outcome === "PASS";
   return freezeDomain({

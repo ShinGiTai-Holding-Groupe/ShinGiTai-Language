@@ -1,4 +1,4 @@
-import { assertTenant, freezeDomain, type TenantContext } from "../shared";
+import { assertTenant, assertValidDate, freezeDomain, type TenantContext } from "../shared";
 import type { LearningEvidenceRecord, LearningEvidenceStatus, RecordEvidenceInput } from "./types";
 
 const transitions: Readonly<Record<LearningEvidenceStatus, readonly LearningEvidenceStatus[]>> = {
@@ -21,6 +21,7 @@ function rejectExecutionPlane(value: object): void {
 
 export function recordLearningEvidence(input: RecordEvidenceInput): LearningEvidenceRecord {
   assertTenant(input);
+  assertValidDate(input.recordedAt, "recordedAt");
   rejectExecutionPlane(input);
   if (!input.evidenceId.trim() || !input.answerId.trim() || !input.skillId.trim())
     throw new Error("Evidence identity is incomplete");
@@ -51,6 +52,7 @@ export function transitionLearningEvidence(
   tenant: TenantContext,
 ): LearningEvidenceRecord {
   assertTenant(tenant);
+  assertValidDate(at, "transition date");
   if (
     record.tenantPartition !== tenant.tenantPartition ||
     record.userId !== tenant.userId ||

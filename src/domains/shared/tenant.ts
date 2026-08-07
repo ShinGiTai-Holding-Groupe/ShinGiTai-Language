@@ -31,6 +31,10 @@ export function assertSameTenant(expected: TenantContext, actual: TenantContext)
   if (!sameTenant(expected, actual)) throw new TenantBoundaryError("Cross-tenant access rejected");
 }
 
+export function assertValidDate(value: string, field: string): void {
+  if (!value.trim() || !Number.isFinite(Date.parse(value))) throw new Error(`${field} is invalid`);
+}
+
 export function freezeDomain<T extends object>(value: T): Readonly<T> {
   for (const item of Object.values(value))
     if (item && typeof item === "object") freezeDomain(item as object);
