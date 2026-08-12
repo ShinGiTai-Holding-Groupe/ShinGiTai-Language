@@ -5,6 +5,7 @@ on:
     branches: [main]
 permissions:
   contents: read
+  packages: read
 jobs:
   validate:
     runs-on: ubuntu-latest
@@ -15,5 +16,47 @@ jobs:
         with:
           node-version: 22
           cache: npm
+          registry-url: https://npm.pkg.github.com
+          scope: "@shingitai-holding-groupe"
       - run: npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Verify independent OdynAI Hikari client consumption
+        working-directory: ${{ runner.temp }}
+        run: |
+          mkdir language-odynai-consumer
+          cd language-odynai-consumer
+          npm init -y
+          npm install --save-exact @shingitai-holding-groupe/odynai-hikari-client@1.0.1 typescript@5.9.2
+          test "$(node -p "require('./node_modules/@shingitai-holding-groupe/odynai-hikari-client/package.json').version")" = "1.0.1"
+          cat > consumer.mts <<'EOF'
+          import {
+            HikariApplicationClient,
+            type ExecuteHikariTurnInput,
+            type ExecuteHikariTurnRequest,
+            type HikariApplicationResponse,
+            type HikariApplicationTransport,
+            type HikariResponseProjection,
+          } from "@shingitai-holding-groupe/odynai-hikari-client";
+
+          type Equal<Left, Right> =
+            (<Value>() => Value extends Left ? 1 : 2) extends
+            (<Value>() => Value extends Right ? 1 : 2) ? true : false;
+          const inputAliasIsCanonical: Equal<ExecuteHikariTurnInput, ExecuteHikariTurnRequest> = true;
+          const responseAliasIsCanonical: Equal<HikariResponseProjection, HikariApplicationResponse> = true;
+          const transport: HikariApplicationTransport = {
+            execute: async () => ({ ok: false, code: "EXECUTION_UNAVAILABLE", message: "proof transport" }),
+          };
+          const client = new HikariApplicationClient(transport);
+          if (!inputAliasIsCanonical || !responseAliasIsCanonical || !client) throw new Error("Public contract proof failed");
+          EOF
+          npx tsc consumer.mts --module nodenext --moduleResolution nodenext --target es2022 --strict --noEmit
+          for subpath in composition runtime-port shinrei provider model; do
+            if node --input-type=module -e "await import('@shingitai-holding-groupe/odynai-hikari-client/' + process.argv[1])" "$subpath" 2>/dev/null; then
+              echo "privileged subpath unexpectedly resolved: $subpath"
+              exit 1
+            fi
+          done
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - run: npm run validate
